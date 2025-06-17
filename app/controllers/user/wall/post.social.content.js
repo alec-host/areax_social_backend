@@ -1,0 +1,37 @@
+const { db2 } = require("../../../models");
+
+const Wall = db2.wall;
+
+module.exports.saveSocialPost = async (data) => {
+  try {
+    console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZ ', data.post_type); 
+    if(data.post_type !== 'social-board' || data.post_type !== 'social-ai-board' ){
+     // return [false,"Invalid post_type. Only 'social-board' or 'social-ai-board' posts can be saved using this method."];
+    }
+
+    if (!data.media_url) {
+      return [false,"media_url is required for social-board posts."];
+    }
+
+    data.item_amount = data.item_amount || 0;
+
+    const newPost = await Wall.create({
+      user_id: data.user_id,
+      email: data.email || null,
+      reference_number: data.reference_number || null,
+      media_url: data.media_url,
+      description: data.caption,
+      item_amount: 0.00,
+      post_type: data.post_type || 'social-board',
+      created_at: data.created_at || new Date(),
+      category: data.category || null,	    
+      is_public: 1,	    
+      is_deleted: 0,
+    });
+
+    return [true,newPost];
+  } catch (error) {
+    console.error('Error saving social-board post:', error.message);
+    return [false,error.message];
+  }
+};

@@ -1,0 +1,230 @@
+const { validationResult } = require("express-validator");
+const { findUserCountByEmail } = require("./user/find.user.count.by.email");
+const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
+const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
+const { addComment } = require("./user/comment/add.comment");
+const { editComment } = require("./user/comment/edit.comment");
+const { removeComment } = require("./user/comment/remove.comment");
+const { getCommentsByPostId } = require("./user/comment/get.comment");
+const { getCommentCount } = require("./user/comment/get.comment.count");
+
+module.exports.AddComment = async(req,res) => {
+    const errors = validationResult(req);
+    const { email, reference_number, post_id, comment } = req.body;
+    if(errors.isEmpty()){
+        try{
+            const email_found = await findUserCountByEmail(email);
+            if(email_found > 0){
+                const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+                if(reference_number_found > 0){
+		    const userDetails = await getUserDetailByReferenceNumber(reference_number);	
+	            const payload = {
+                        post_id,
+                        user_id: userDetails._id,
+                        commentor_email: email,
+                        commentor_reference_number: reference_number,
+                        comment_text: comment,
+		    };		
+		    const response = await addComment(payload);
+		    if(response[0]){	
+                        res.status(200).json({
+                            success: true,
+                            error: false,
+			    data: response[1],	
+                            message: "Comment was added"
+                        });
+		    }else{
+                        res.status(400).json({
+                            success: false,
+                            error: true,
+                            message: response[1]
+                        });
+		    }
+                }else{
+                    res.status(404).json({
+                        success: false,
+                        error: true,
+                        message: "Reference number not found."
+                    });
+                }
+            }else{
+                res.status(404).json({
+                    success: false,
+                    error: true,
+                    message: "Email not found."
+                });
+            }
+        }catch(e){
+            if(e){
+                res.status(500).json({
+                    success: false,
+                    error: true,
+                    message: e?.response?.message || 'Something wrong has happened'
+                });
+            }
+        }
+    }else{
+        res.status(422).json({ success: false, error: true, message: errors.array() });
+    }
+};
+
+module.exports.EditComment = async(req,res) => {
+    const errors = validationResult(req);
+    const { email, reference_number, comment_id, comment } = req.body;
+    if(errors.isEmpty()){
+        try{
+            const email_found = await findUserCountByEmail(email);
+            if(email_found > 0){
+                const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+                if(reference_number_found > 0){
+		    const payload = {
+		        commentor_email: email,	    
+		        commentor_reference_number: reference_number,	    
+                        comment_id,
+		        comment_text: comment	    
+		    }; 	
+                    const response = await editComment(payload);
+                    if(response[0]){
+                        res.status(200).json({
+                            success: true,
+                            error: false,
+                            message: response[1]
+                        });
+                    }else{
+                        res.status(404).json({
+                            success: false,
+                            error: true,
+                            message: response[1]
+                        });
+                    }
+                }else{
+                    res.status(404).json({
+                        success: false,
+                        error: true,
+                        message: "Reference number not found."
+                    });
+                }
+            }else{
+                res.status(404).json({
+                    success: false,
+                    error: true,
+                    message: "Email not found."
+                });
+            }
+        }catch(e){
+            if(e){
+                res.status(500).json({
+                    success: false,
+                    error: true,
+                    message: e?.response?.message || e?.message || 'Something wrong has happened'
+                });
+            }
+        }
+    }else{
+        res.status(422).json({ success: false, error: true, message: errors.array() });
+    }
+}
+
+module.exports.RemoveComment = async(req,res) => {
+    const errors = validationResult(req);
+    const { email, reference_number, comment_id } = req.body;
+    if(errors.isEmpty()){
+        try{
+            const email_found = await findUserCountByEmail(email);
+            if(email_found > 0){
+                const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+                if(reference_number_found > 0){
+	            const response = await removeComment(comment_id);		
+		    if(response[0]){	
+                        res.status(200).json({
+                            success: true,
+                            error: false,
+                            message: response[1]
+                        });
+		    }else{
+                        res.status(404).json({
+                            success: false,
+                            error: true,
+                            message: response[1]
+                        });
+		    }
+                }else{
+                    res.status(404).json({
+                        success: false,
+                        error: true,
+                        message: "Reference number not found."
+                    });
+                }
+            }else{
+                res.status(404).json({
+                    success: false,
+                    error: true,
+                    message: "Email not found."
+                });
+            }
+        }catch(e){
+            if(e){
+                res.status(500).json({
+                    success: false,
+                    error: true,
+                    message: e?.response?.message || e?.message || 'Something wrong has happened'
+                });
+            }
+        }
+    }else{
+        res.status(422).json({ success: false, error: true, message: errors.array() });
+    }
+};
+
+module.exports.GetCommentCount = async(req,res) => {
+    const errors = validationResult(req);
+    const { email, reference_number, post_id } = req.query;
+    if(errors.isEmpty()){
+        try{
+            const email_found = await findUserCountByEmail(email);
+            if(email_found > 0){
+                const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+                if(reference_number_found > 0){
+		    const response = await getCommentCount(post_id);
+		    if(response[0]){	
+                        res.status(200).json({
+                            success: true,
+                            error: false,
+			    count: response[1],	
+                            message: response[2]
+                        });
+		    }else{
+                        res.status(404).json({
+                            success: false,
+                            error: true,
+			    count: response[1],	
+                            message: response[2]
+                        });
+		    }
+                }else{
+                    res.status(404).json({
+                        success: false,
+                        error: true,
+                        message: "Reference number not found."
+                    });
+                }
+            }else{
+                res.status(404).json({
+                    success: false,
+                    error: true,
+                    message: "Email not found."
+                });
+            }
+        }catch(e){
+            if(e){
+                res.status(500).json({
+                    success: false,
+                    error: true,
+                    message: e?.response?.message || e?.message || 'Something wrong has happened'
+                });
+            }
+        }
+    }else{
+        res.status(422).json({ success: false, error: true, message: errors.array() });
+    }
+};

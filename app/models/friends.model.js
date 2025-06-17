@@ -1,0 +1,97 @@
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize,Sequelize) => {
+  const AreaXFriends = sequelize.define('AreaXFriends', {
+    _id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    email: {
+      type: DataTypes.STRING(65),
+      allowNull: false,
+    },	  
+    reference_number: {
+      type: DataTypes.STRING(65),
+    },
+    friend_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    friend_reference_number: {
+      type: DataTypes.STRING(65),
+    },
+    friend_name: {
+      type: DataTypes.STRING(105),
+      allowNull: true	    
+    },	
+    friend_caption: {
+      type: DataTypes.STRING(160),
+      allowNull: true
+    },
+    friend_profile_picture_url: {
+      type: DataTypes.STRING(2048),
+      allowNull: true,
+      validate: {
+         isUrl: {
+             msg: "Invalid URL format."
+         },
+      }
+    },	  
+    friend_category: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },	  
+    status: {
+      type: DataTypes.ENUM('pending', 'accepted', 'blocked', 'unfriended'),
+      allowNull: false,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: () => new Date().toISOString(),
+    },
+  }, {
+    indexes: [
+        {
+            name: 'reference_number_index',
+            fields: ['reference_number'],
+            using: 'BTREE',
+        },
+	{
+            name: 'email_index',
+            fields: ['email'],
+            using: 'BTREE',		
+	},
+        {
+            name: 'status_index',
+            fields: ['status'],
+            using: 'BTREE',
+        },
+	{
+            name: 'friend_reference_number_index',
+	    fields: ['friend_reference_number'],
+	    using: 'BTREE',	
+	},
+	{
+            name: 'friend_category_index',
+            fields: ['friend_category'],
+            using: 'BTREE',
+	},  
+    ],	  
+    tableName: 'tbl_areax_friends',
+    timestamps: false,
+    collate: 'utf8mb4_general_ci',
+    engine: 'InnoDB',
+  });
+
+  AreaXFriends.associate = (models) => {
+    AreaXFriends.belongsTo(models.Users, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+    AreaXFriends.belongsTo(models.Users, { foreignKey: 'friend_id', onDelete: 'CASCADE' });
+  };
+
+  return AreaXFriends;
+};
