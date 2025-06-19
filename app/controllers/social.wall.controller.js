@@ -7,6 +7,7 @@ const { getWallRecordsByReferenceNumber } = require("./user/wall/get.wall.by.ref
 const { saveShowPost } = require("./user/wall/post.show.content");
 const { saveSocialPost } = require("./user/wall/post.social.content");
 const { saveSharePost } = require("./user/wall/post.share.content");
+const { removeSocialPost } = require("./user/wall/remove.social.post");
 const { saveShowOpenBidPost,saveShowClosedBidPost } = require("./user/wall/post.show.bid.content");
 const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 const { addTimeToCurrentDate } = require("../utils/future.date.time");
@@ -188,7 +189,7 @@ module.exports.SaveShowContent = async(req,res) => {
 
 module.exports.SaveSocialContent = async(req,res) => {
     const errors = validationResult(req);
-    const { email, reference_number, media_url, gps_coordinates, caption } = req.body;
+    const { email, reference_number, media_url, gps_coordinates, caption, is_buy_enabled, is_comment_allowed, is_minted_automatically } = req.body;
     const file = req.file ? req.file : null;	
     if(errors.isEmpty()){
         try{
@@ -433,80 +434,128 @@ module.exports.SaveShowOpenBidContent = async(req,res) => {
 };
 
 module.exports.SaveShowClosedBidContent = async(req,res) => {
-    const errors = validationResult(req);
-    const { email, reference_number, media_url, caption, item_amount, gps_coordinates, share_on_social_wall, close_time } = req.body;
-    const file = req.file ? req.file : null;	
-    if(errors.isEmpty()){
-        try{
-            const email_found = await findUserCountByEmail(email);
-            if(email_found > 0){
-                const reference_number_found = await findUserCountByReferenceNumber(reference_number);
-                if(reference_number_found > 0){
-                     const userDetail = await getUserDetailByReferenceNumber(reference_number);
-                     if(file){
-                         image_url = await uploadImageToCustomStorage(file?.filename);
-                     }else{
-                         image_url = null;
-		     }
-		     const bidCloseTime = await addTimeToCurrentDate(close_time);
-		     console.log('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW 0 ', bidCloseTime);	
-		     if(bidCloseTime[0]){	
-                        const payload = {
-                            user_id: userDetail._id,
-                            email,
-                            reference_number,
-                            media_url: image_url || media_url,
-                            caption,
-                            item_amount,    
-			    gps_coordinates,     
-                            post_type: share_on_social_wall === 0 ? 'show-board' : 'cross-list',
-			    closed_time: new Date(bidCloseTime[1]),     
-                        };
-                        const response = await saveShowClosedBidPost(payload);
-                        if(response[0]){
-                            res.status(200).json({
-                                success: true,
-                                error: false,
-                                message: "Content posted successfully."
-                            });
-                        }else{
-                            res.status(400).json({
-                                success: false,
-                                error: true,
-                                message: response[1]
-                            });
-                        }
-		     }else{
-                         res.status(400).json({
-                             success: false,
-                             error: true,
-                             message: bidCloseTime[1]
-                         });			     
-		     }
-                }else{
-                    res.status(404).json({
-                        success: false,
-                        error: true,
-                        message: "Reference number not found."
-                    });
-                }
-            }else{
-                res.status(404).json({
-                    success: false,
-                    error: true,
-                    message: "Email not found."
-                });
-            }
-        }catch(e){
-            if(e){
-                res.status(500).json({
-                    success: false,
-                    error: true,
-                    message: e?.response?.message || e?.message || 'Something wrong has happened'
-                });
-            }
+  const errors = validationResult(req);
+  const { email, reference_number, media_url, caption, item_amount, gps_coordinates, share_on_social_wall, close_time } = req.body;
+  const file = req.file ? req.file : null;	
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });	  
+     return;	  
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;	     
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });	     
+	return;     
+     }
+     const userDetail = await getUserDetailByReferenceNumber(reference_number);
+     if(file){
+        image_url = await uploadImageToCustomStorage(file?.filename);
+     }else{
+        image_url = null;
+     }
+     const bidCloseTime = await addTimeToCurrentDate(close_time);
+     if(bidCloseTime[0]){	
+        const payload = {
+           user_id: userDetail._id,
+           email,
+           reference_number,
+           media_url: image_url || media_url,
+           caption,
+           item_amount,    
+           gps_coordinates,     
+           post_type: share_on_social_wall === 0 ? 'show-board' : 'cross-list',
+	   closed_time: new Date(bidCloseTime[1]),     
+        };
+        const response = await saveShowClosedBidPost(payload);
+        if(response[0]){
+           res.status(200).json({
+               success: true,
+               error: false,
+               message: "Content posted successfully."
+           });
+        }else{
+           res.status(400).json({
+               success: false,
+               error: true,
+               message: response[1]
+           });
         }
-    }else{
-        res.status(422).json({ success: false, error: true, message: errors.array() });
-    }
+     }else{
+         res.status(400).json({
+             success: false,
+             error: true,
+             message: bidCloseTime[1]
+         });			     
+     }
+  }catch(e){
+      if(e){
+         res.status(500).json({
+             success: false,
+             error: true,
+              message: e?.response?.message || e?.message || 'Something wrong has happened'
+         });
+      }
+  }
+};
+
+module.exports.DeleteSocialPost = async(req,res) => {
+  const errors = validationResult(req);
+  const { email, reference_number } = req.body;
+  const { post_id } = req.params;	
+  const file = req.file ? req.file : null;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+     return;	  
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+	return;     
+     }	  
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+         res.status(404).json({
+             success: false,
+             error: true,
+             message: "Reference number not found."
+         });
+	 return;    
+     }	
+     const response = await removeSocialPost({ post_id, reference_number });
+     if(!response[0]){
+         res.status(400).json({
+             success: false,
+             error: true,
+             message: response[1]
+         });
+         return;
+     }
+     res.status(200).json({ success: true, error: false, message: response[1] });
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.response?.data || e?.message || 'Something wrong has happened'
+        });
+     }
+  }  
 };

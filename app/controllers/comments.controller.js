@@ -127,7 +127,8 @@ module.exports.EditComment = async(req,res) => {
 
 module.exports.RemoveComment = async(req,res) => {
     const errors = validationResult(req);
-    const { email, reference_number, comment_id } = req.body;
+    const { email, reference_number } = req.body;
+    const { comment_id } = req.params;	
     if(errors.isEmpty()){
         try{
             const email_found = await findUserCountByEmail(email);

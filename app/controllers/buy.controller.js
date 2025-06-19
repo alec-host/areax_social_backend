@@ -6,7 +6,7 @@ const { addBuyItem } = require("./user/buy/add.buy.item");
 const { deleteBuyItem } = require("./user/buy/delete.buy.item");
 const { editBuyItem } = require("./user/buy/edit.buy.item");
 
-module.exports.EditBuyItem = async(req,res) => {
+module.exports.EditBuyPostContent = async(req,res) => {
     const errors = validationResult(req);
     const { email, reference_number, post_id, item_amount, caption } = req.body;
     if(errors.isEmpty()){
@@ -61,9 +61,10 @@ module.exports.EditBuyItem = async(req,res) => {
     }
 };
 
-module.exports.DeleteBuyItem = async(req,res) => {
+module.exports.DeleteBuyPostContent = async(req,res) => {
     const errors = validationResult(req);
-    const { email, reference_number, post_id } = req.body;
+    const { email, reference_number } = req.body;
+    const { post_id } = req.params;	
     if(errors.isEmpty()){
         try{
             const email_found = await findUserCountByEmail(email);

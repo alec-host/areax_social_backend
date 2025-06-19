@@ -3,8 +3,7 @@ const { db2 } = require("../../../models");
 const Wall = db2.wall;
 
 module.exports.saveSocialPost = async (data) => {
-  try {
-    console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZ ', data.post_type); 
+  try{ 
     if(data.post_type !== 'social-board' || data.post_type !== 'social-ai-board' ){
      // return [false,"Invalid post_type. Only 'social-board' or 'social-ai-board' posts can be saved using this method."];
     }

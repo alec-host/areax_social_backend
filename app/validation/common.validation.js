@@ -23,6 +23,42 @@ const multiUploadValidator = [
     }
 ];
 
+const singleSocialWallUploadValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('caption')
+        .optional()
+        .isLength({ max: 250 })
+        .withMessage('Caption must not exceed 250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('is_buy_enabled')
+	.isInt({ min: 0, max: 1 })
+        .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
+    body('is_comment_allowed')
+	.isInt({ min: 0, max: 1 })
+        .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
+    body('is_minted_automatically')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
+    (req, res, next) => {
+        if(!req.file){
+            //throw new Error('No file uploaded');
+            return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+        }
+        const validFormats = ['.mp4','.jpeg','.jpg','.png','.webp'];
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        if(!validFormats.includes(ext)){
+            //throw new Error('Invalid file format. Only .jpeg,.webp are allowed.');
+            return res.status(400).json({ success: false, error: true, message: 'Invalid file format. Only MP4,JPEG,JPG,PNG,and WEBP are allowed.' });
+        }
+        next();
+    }
+];
+
 const singleSocialUploadValidator = [
     body('email', 'Missing: email must be checked').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
@@ -76,6 +112,30 @@ const singleGroupChatUploadValidator = [
         }
         next();
     }
+];
+
+const socialWallURLValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('media_url','Media url must be provided').not().isEmpty(),
+    body('caption')
+        .optional() // Makes caption optional
+        .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
+        .withMessage('Caption must not exceed 5250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('is_buy_enabled')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
+    body('is_comment_allowed')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
+    body('is_minted_automatically')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
 ];
 
 const singleGroupMgmtUploadValidator = [
@@ -249,11 +309,25 @@ const showMediaURLValidator = [
         .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months'),
 ];
 
+const deletePostValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    param('post_id', 'Post id must be provided').not().isEmpty(),
+];
+
 const addLikeCommentValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     body('post_id', 'Post id must be provided').not().isEmpty(),	
+];
+
+const removeLikeCommentValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    param('post_id', 'Post id must be provided').not().isEmpty(),
 ];
 
 const addCommentValidator = [
@@ -268,7 +342,7 @@ const removeLikeValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    body('like_id', 'Like id must be provided').not().isEmpty(),
+    param('like_id', 'Like id must be provided').not().isEmpty(),
 ];
 
 const editCommentValidator = [
@@ -283,7 +357,7 @@ const removeCommentValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    body('comment_id', 'Comment id must be provided').not().isEmpty(),
+    param('comment_id', 'Comment id must be provided').not().isEmpty(),
 ];
 
 const editItemValidator = [
@@ -310,10 +384,24 @@ const userGroupMgmtValidator = [
     body('friend_reference_number', 'friend_reference_number must be provided').not().isEmpty(),
 ];
 
-const groupMgmtValidator = [
+const deleteUserFromGroupValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
-    body('group_id', 'group_id must be provided').not().isEmpty(),
+    param('group_id', 'group_id must be provided').not().isEmpty(),
+    param('friend_reference_number', 'friend_reference_number must be provided').not().isEmpty(),
+];
+
+const getGroupChatsValidator = [
+    query('email', 'Email cannot be Empty').not().isEmpty(),
+    query('email', 'Invalid email').isEmail(),
+    query('reference_number', 'Reference number must be provided').not().isEmpty(),	
+    query('group_id', 'group_id must be provided').not().isEmpty(),
+];
+
+const removeGroupValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    param('group_id', 'group_id must be provided').not().isEmpty(),
 ];
 
 const editGroupMessageValidator = [
@@ -323,10 +411,10 @@ const editGroupMessageValidator = [
     body('message', 'message must be provided').not().isEmpty(),	
 ];
 
-const groupMessageMgmtValidator = [
+const removeGroupMessageValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
-    body('message_id', 'message_id must be provided').not().isEmpty(),
+    param('message_id', 'message_id must be provided').not().isEmpty(),
 ];
 
 const changePrivacyStatusValidator = [
@@ -357,9 +445,10 @@ module.exports = {
     editItemValidator,addCommentValidator,editCommentValidator,
     showMediaURLValidator,singleShowUploadValidator,getLikeCommentValidator,
     singleGroupChatUploadValidator,groupChatMediaURLValidator,
-    userGroupMgmtValidator,groupMgmtValidator,
-    editGroupMessageValidator,groupMessageMgmtValidator,
+    userGroupMgmtValidator,editGroupMessageValidator,removeGroupMessageValidator,
     singleGroupMgmtUploadValidator,socialAIMediaURLValidator,
     getFriendDetailsValidator,changePrivacyStatusValidator,	
-    targetProfileValidator,acceptFriendValidator,	
+    targetProfileValidator,acceptFriendValidator,singleSocialWallUploadValidator,
+    socialWallURLValidator,deletePostValidator,removeLikeCommentValidator,
+    removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator	
 };

@@ -141,7 +141,8 @@ module.exports.AddUserToGroupChat = async(req,res) => {
 };
 
 module.exports.DeleteGroupChat = async(req,res) => {
-    const { email, reference_number, group_id } = req.body;
+    const { email, reference_number } = req.body;
+    const { group_id } = req.params;	
     const errors = validationResult(req);	
     if(errors.isEmpty()){
         try{
@@ -251,7 +252,8 @@ module.exports.EditGroupChatMessage = async(req,res) => {
 };
 
 module.exports.DeleteGroupChatMessage = async(req,res) => {
-    const { email, reference_number, message_id } = req.body;
+    const { email, reference_number } = req.body;
+    const { message_id } = req.params;	
     const errors = validationResult(req);	
     if(errors.isEmpty()){
         try{
@@ -413,7 +415,8 @@ module.exports.SendGroupMessageChat = async(req,res) => {
 };
 
 module.exports.RemoveUserFromGroupChat = async(req,res) => {
-    const { email, reference_number, group_id } = req.body;	
+    const { email, reference_number } = req.body;	
+    const { group_id, friend_reference_number } = req.params;	
     const errors = validationResult(req);
     if(errors.isEmpty()){
         try{

@@ -56,6 +56,18 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.DATE,
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
+    is_buy_enabled: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1
+    },
+    is_comment_allowed: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1
+    },	 
+    is_minted_automatically: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1	    
+    },	  
     is_public: {
       type: DataTypes.INTEGER,
       defaultValue: 0
@@ -88,7 +100,7 @@ module.exports = (sequelize, Sequelize) => {
 	},
 	{
             name: 'flag_index',
-	    fields: ['is_public','is_deleted']	
+	    fields: ['is_public','is_deleted','is_buy_enabled','is_comment_allowed','is_minted_automatically']	
 	}
     ],
     tableName: 'tbl_areax_wall',

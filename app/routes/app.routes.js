@@ -66,9 +66,12 @@ router.get('/getWallContent',auth,inputValidator.getWallFeedValidator,wallContro
  *-file
  *-caption
  *-gps_coordinates
+ *-is_buy_enabled
+ *-is_comment_allowed
+ *-is_minted_automatically
  *
  * */
-router.post('/socialContent',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialUploadValidator,wallController.SaveSocialContent);
+router.post('/socialContent',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialWallUploadValidator,wallController.SaveSocialContent);
 /*
  *
  *-email
@@ -76,9 +79,20 @@ router.post('/socialContent',auth,fileHandler.uploadMiddleware,inputValidator.si
  *-media_url
  *-caption
  *-gps_coordinates
+ *-is_buy_enabled
+ *-is_comment_allowed
+ *-is_minted_automatically 
  *
  * */
-router.post('/socialContentWithURL',auth,inputValidator.socialMediaURLValidator,wallController.SaveSocialContent);
+router.post('/socialContentWithURL',auth,inputValidator.socialWallURLValidator,wallController.SaveSocialContent);
+/*
+ *
+ *-email
+ *-reference_number
+ *-post_id
+ *
+ * */
+router.delete('/deleteSocialContent/:post_id',inputValidator.deletePostValidator,wallController.DeleteSocialPost);
 /*
  *
  *-email
@@ -147,7 +161,7 @@ router.post('/addLike',auth,inputValidator.addLikeCommentValidator,likeControlle
  *-like_id
  *
  * */
-router.delete('/deleteLike',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
+router.delete('/deleteLike/:like_id',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
 /*
  *-email
  *-reference_number
@@ -180,7 +194,7 @@ router.patch('/editComment',auth,inputValidator.editCommentValidator,commentCont
  *-comment_id
  *
  * */
-router.delete('/deleteComment',auth,inputValidator.removeCommentValidator,commentController.RemoveComment);
+router.delete('/deleteComment/:comment_id',auth,inputValidator.removeCommentValidator,commentController.RemoveComment);
 /*
  *-email
  *-reference_number
@@ -198,7 +212,7 @@ router.get('/getCommentCount',auth,inputValidator.getLikeCommentValidator,commen
  *-share_on_social_wall
  *
  * */
-router.patch('/editBuyItem',auth,inputValidator.editItemValidator,buyController.EditBuyItem);
+router.patch('/editBuyPost',auth,inputValidator.editItemValidator,buyController.EditBuyPostContent);
 /*
  *
  *-email
@@ -206,7 +220,7 @@ router.patch('/editBuyItem',auth,inputValidator.editItemValidator,buyController.
  *-post_id
  *
  * */
-router.delete('/deleteBuyItem',auth,inputValidator.addLikeCommentValidator,buyController.DeleteBuyItem);
+router.delete('/deleteBuyPost/:post_id',auth,inputValidator.deletePostValidator,buyController.DeleteBuyPostContent);
 /*
  *-email
  *-reference_number
@@ -279,7 +293,7 @@ router.post('/postBuyContentWithURL',auth,inputValidator.showMediaURLValidator,w
  *-file
  *
 */
-router.post('/createGroupChat',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateGroupChat);
+router.post('/createGroup',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateGroupChat);
 /*
  *
  *-email
@@ -287,16 +301,7 @@ router.post('/createGroupChat',auth,fileHandler.uploadMiddleware,inputValidator.
  *-group_id
  *
 */
-router.delete('/removeGroupChat',auth,inputValidator.groupMgmtValidator,groupChatController.DeleteGroupChat);
-/*
- *
- *-email
- *-reference_number
- *-group_id
- *-friend_reference_number
- *
-*/
-router.post('/addUserToGroupChat',auth,inputValidator.userGroupMgmtValidator,groupChatController.AddUserToGroupChat);
+router.delete('/removeGroup/:group_id',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroupChat);
 /*
  *
  *-email
@@ -305,7 +310,16 @@ router.post('/addUserToGroupChat',auth,inputValidator.userGroupMgmtValidator,gro
  *-friend_reference_number
  *
 */
-router.delete('/removeUserFromGroupChat',auth,inputValidator.userGroupMgmtValidator,groupChatController.RemoveUserFromGroupChat);
+router.post('/addUserToGroup',auth,inputValidator.userGroupMgmtValidator,groupChatController.AddUserToGroupChat);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_id
+ *-friend_reference_number
+ *
+*/
+router.delete('/removeUserFromGroup/:group_id/:friend_reference_number',auth,inputValidator.deleteUserFromGroupValidator,groupChatController.RemoveUserFromGroupChat);
 /*
  *
  *-email
@@ -342,7 +356,7 @@ router.patch('/editGroupChatMessage',auth,inputValidator.editGroupMessageValidat
  *-message_id
  *
 */
-router.delete('/removeGroupChatMessage',auth,inputValidator.groupMessageMgmtValidator,groupChatController.DeleteGroupChatMessage);
+router.delete('/removeGroupChatMessage/:message_id',auth,inputValidator.removeGroupMessageValidator,groupChatController.DeleteGroupChatMessage);
 /*
  *
  *-email
@@ -350,7 +364,7 @@ router.delete('/removeGroupChatMessage',auth,inputValidator.groupMessageMgmtVali
  *-group_id
  *
 */
-router.get('/getGroupChats',auth,inputValidator.groupMgmtValidator,groupChatController.GetGroupChats);
+router.get('/getGroupChats',auth,inputValidator.getGroupChatsValidator,groupChatController.GetGroupChats);
 /*
  *
  *-email
