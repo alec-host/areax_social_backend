@@ -29,7 +29,7 @@ const singleSocialWallUploadValidator = [
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
     body('caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Caption must not exceed 250 characters.'),
     body('gps_coordinates')
         .optional()
@@ -65,12 +65,42 @@ const singleSocialUploadValidator = [
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),	
     body('caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Caption must not exceed 250 characters.'),
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
         .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),	
+    (req, res, next) => {
+        if(!req.file){
+            //throw new Error('No file uploaded');
+            return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+        }
+        const validFormats = ['.mp4','.jpeg','.jpg','.png','.webp'];
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        if(!validFormats.includes(ext)){
+            //throw new Error('Invalid file format. Only .jpeg,.webp are allowed.');
+            return res.status(400).json({ success: false, error: true, message: 'Invalid file format. Only MP4,JPEG,JPG,PNG,and WEBP are allowed.' });
+        }
+        next();
+    }
+];
+
+const singleSocialSharedUploadValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('caption')
+        .optional()
+        .isLength({ max: 5250 })
+        .withMessage('Caption must not exceed 250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('is_public')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_public must be checked, has a value of 0 or 1.'),	
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -145,7 +175,7 @@ const singleGroupMgmtUploadValidator = [
     body('group_name', 'Missing: group_name must be checked').not().isEmpty(),
     body('group_caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Missing: group_caption must not exceed 250 characters.'),
     (req, res, next) => {
         if(!req.file){
@@ -172,7 +202,7 @@ const singleShowUploadValidator = [
         .withMessage('item_amount must be greater than 0 if provided.'),
     body('caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Caption must not exceed 250 characters.'),
     body('gps_coordinates')
         .optional()
@@ -185,7 +215,16 @@ const singleShowUploadValidator = [
     body('close_time')
         .optional()
         .matches(/^(1?[1-9]|2[0-4])\s?hours$|^(1?[1-9]|[1-2][0-9]|30)\s?days$|^(1?[1-9]|1[0-2])\s?months$/)
-        .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months".'),	
+        .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months".'),
+    body('is_buy_enabled')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
+    body('is_comment_allowed')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
+    body('is_minted_automatically')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -250,6 +289,40 @@ const socialMediaURLValidator = [
         .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),	
 ];
 
+const socialAiMediaURLValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('media_url','Media url must be provided').not().isEmpty(),
+    body('category','Category must be provided').not().isEmpty(),	
+    body('caption')
+        .optional() // Makes caption optional
+        .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
+        .withMessage('Caption must not exceed 5250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+];
+
+const socialSharedMediaURLValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('media_url','Media url must be provided').not().isEmpty(),
+    body('caption')
+        .optional() // Makes caption optional
+        .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
+        .withMessage('Caption must not exceed 5250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('is_public')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_public must be checked, has a value of 0 or 1.'),	
+];
+
 const socialAIMediaURLValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
@@ -289,7 +362,7 @@ const showMediaURLValidator = [
     body('media_url', 'Media url must be provided').not().isEmpty(),
     body('caption')
         .optional() // Makes caption optional
-        .isLength({ max: 250 }) // Validates that length does not exceed 250 characters
+        .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
         .withMessage('Caption must not exceed 250 characters.'),
     body('item_amount')
         .optional() // Makes item_amount optional
@@ -307,6 +380,15 @@ const showMediaURLValidator = [
         .optional()
 	.matches(/^(1?[1-9]|2[0-4])\s?hours$|^(1?[1-9]|[1-2][0-9]|30)\s?days$|^(1?[1-9]|1[0-2])\s?months$/)
         .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months'),
+    body('is_buy_enabled')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
+    body('is_comment_allowed')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
+    body('is_minted_automatically')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
 ];
 
 const deletePostValidator = [
@@ -450,5 +532,7 @@ module.exports = {
     getFriendDetailsValidator,changePrivacyStatusValidator,	
     targetProfileValidator,acceptFriendValidator,singleSocialWallUploadValidator,
     socialWallURLValidator,deletePostValidator,removeLikeCommentValidator,
-    removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator	
+    removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator,
+    socialSharedMediaURLValidator,singleSocialSharedUploadValidator,
+    socialAiMediaURLValidator	
 };

@@ -120,7 +120,7 @@ module.exports.GetWallContentByReferenceNumber = async(req,res) => {
 
 module.exports.SaveShowContent = async(req,res) => {
     const errors = validationResult(req);
-    const { email, reference_number, media_url, caption, item_amount, gps_coordinates, share_on_social_wall } = req.body;
+    const { email, reference_number, media_url, caption, item_amount, gps_coordinates, share_on_social_wall, is_buy_enabled, is_comment_allowed, is_minted_automatically } = req.body;
     const file = req.file ? req.file : null;	
     if(errors.isEmpty()){
         try{
@@ -144,6 +144,9 @@ module.exports.SaveShowContent = async(req,res) => {
                         item_amount,
 			gps_coordinates,     
 			post_type: share_on_social_wall === 0 ? 'show-board' : 'cross-list',
+                        is_buy_enabled: is_buy_enabled,			     
+			is_comment_allowed: is_comment_allowed,
+			is_minted_automatically: is_minted_automatically,     
                      };
                      const response = await saveShowPost(payload);
                      if(response[0]){
@@ -211,7 +214,10 @@ module.exports.SaveSocialContent = async(req,res) => {
 			media_url: image_url || media_url,
 			caption,
 			gps_coordinates,     
-			post_type: 'social-board'     
+			post_type: 'social-board',
+			is_buy_enabled: is_buy_enabled,
+			is_comment_allowed: is_comment_allowed,
+			is_minted_automatically: is_minted_automatically     
 		     };
 		     const response = await saveSocialPost(payload);
 		     if(response[0]){	
@@ -257,7 +263,7 @@ module.exports.SaveSocialContent = async(req,res) => {
 
 module.exports.SaveShareContent = async(req,res) => {
     const errors = validationResult(req);
-    const { email, reference_number, media_url, caption } = req.body;
+    const { email, reference_number, media_url, caption, is_public } = req.body;
     const file = req.file ? req.file : null;	
     if(errors.isEmpty()){
         try{
@@ -278,6 +284,9 @@ module.exports.SaveShareContent = async(req,res) => {
                         reference_number,
                         media_url: image_url || media_url,
                         caption,
+			is_buy_enabled: 0,
+			is_minted_automatically: 0,     
+			is_public   
                      };
                      const response = await saveSharePost(payload);
                      if(response[0]){
@@ -332,7 +341,11 @@ module.exports.SaveSocialAIContent = async(req,res) => {
                reference_number: SYSTEM_USER_REFERENCE_NUMBER,
                media_url: media_url,
                caption,
-	       post_type: 'social-ai-board',	   
+	       category,		   
+	       post_type: 'social-ai-board',
+               is_buy_enabled: 0,
+	       is_comment_allowed: 1,	   
+               is_minted_automatically: 0,		   
            };
            const response = await saveSocialPost(payload);
            if(response[0]){

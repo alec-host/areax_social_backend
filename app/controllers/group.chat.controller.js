@@ -14,7 +14,7 @@ const { removeUserFromGroup } = require("./user/group/remove.user.group");
 
 const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 
-module.exports.CreateGroupChat = async(req,res) => {
+module.exports.CreateGroup = async(req,res) => {
     const errors = validationResult(req);	
     const { email, reference_number, group_name, group_caption } = req.body;
     const file = req.file ? req.file : null;	
@@ -82,7 +82,7 @@ module.exports.CreateGroupChat = async(req,res) => {
     }
 };
 
-module.exports.AddUserToGroupChat = async(req,res) => {
+module.exports.AddUserToGroup = async(req,res) => {
     const { email, reference_number, friend_id, group_id } = req.body;
     const errors = validationResult(req);	
     if(errors.isEmpty()){
@@ -140,7 +140,7 @@ module.exports.AddUserToGroupChat = async(req,res) => {
     }
 };
 
-module.exports.DeleteGroupChat = async(req,res) => {
+module.exports.DeleteGroup = async(req,res) => {
     const { email, reference_number } = req.body;
     const { group_id } = req.params;	
     const errors = validationResult(req);	
@@ -253,7 +253,7 @@ module.exports.EditGroupChatMessage = async(req,res) => {
 
 module.exports.DeleteGroupChatMessage = async(req,res) => {
     const { email, reference_number } = req.body;
-    const { message_id } = req.params;	
+    const { message_id, user_id } = req.params;	
     const errors = validationResult(req);	
     if(errors.isEmpty()){
         try{
@@ -304,7 +304,7 @@ module.exports.DeleteGroupChatMessage = async(req,res) => {
     }
 };
 
-module.exports.GetGroupChats = async(req,res) => {
+module.exports.GetGroupChatMessages = async(req,res) => {
     const { email, reference_number, group_id } = req.query;
     const errors = validationResult(req);	
     if(errors.isEmpty()){
@@ -356,7 +356,7 @@ module.exports.GetGroupChats = async(req,res) => {
     }
 };
 
-module.exports.SendGroupMessageChat = async(req,res) => {
+module.exports.SendGroupChatMessage = async(req,res) => {
     const { email, reference_number, message, media_url, group_id } = req.body;
     const errors = validationResult(req);
     if(errors.isEmpty()){
@@ -414,7 +414,7 @@ module.exports.SendGroupMessageChat = async(req,res) => {
     }
 };
 
-module.exports.RemoveUserFromGroupChat = async(req,res) => {
+module.exports.RemoveUserFromGroup = async(req,res) => {
     const { email, reference_number } = req.body;	
     const { group_id, friend_reference_number } = req.params;	
     const errors = validationResult(req);

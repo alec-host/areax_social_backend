@@ -13,7 +13,9 @@ module.exports.saveShowOpenBidPost = async(data) => {
       item_amount: data.item_amount || 0.00,
       post_type: data.post_type || 'show-board',
       created_at: data.created_at || new Date(),
-      bid_type: 'open',	    
+      bid_type: 'open',	 
+      is_comment_allowed: 0,	    
+      is_minted_automatically: 0,	    
       is_public: 1,
       is_deleted: 0,
     });
@@ -36,7 +38,9 @@ module.exports.saveShowClosedBidPost = async(data) => {
       post_type: data.post_type || 'show-board',
       created_at: data.created_at || new Date(),
       bid_type: 'closed',
-      bid_close_time: data.closed_time || new Date(),	    
+      bid_close_time: data.closed_time || new Date(),	 
+      is_comment_allowed: 0,	    
+      is_minted_automatically: 0,	    
       is_public: 0,
       is_deleted: 0,
     });
