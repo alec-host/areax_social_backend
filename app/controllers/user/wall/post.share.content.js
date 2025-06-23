@@ -24,7 +24,9 @@ module.exports.saveSharePost = async (data) => {
       item_amount: 0.00,
       post_type: 'social-board',
       created_at: data.created_at || new Date(),
-      is_public: 0,	    
+      is_buy_enabled: data.is_buy_enabled,
+      is_minted_automatically: data.is_minted_automatically,
+      is_public: data.is_public,	    
       is_deleted: 0,
     });
 

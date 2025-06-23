@@ -14,6 +14,7 @@ module.exports.saveShowPost = async(data) => {
       item_amount: data.item_amount || 0.00,
       post_type: data.post_type,
       created_at: data.created_at || new Date(),
+      is_minted_automatically: 0,
       is_public: 1,	    
       is_deleted: 0,
     });
