@@ -17,7 +17,10 @@ module.exports.saveSocialPost = async (data) => {
     const newPost = await Wall.create({
       user_id: data.user_id,
       email: data.email || null,
+      username: data.username,
+      profile_image_url: data.profile_image_url,	    
       reference_number: data.reference_number || null,
+      location_name: data.location_name,	    
       media_url: data.media_url,
       description: data.caption,
       item_amount: 0.00,

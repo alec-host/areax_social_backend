@@ -34,6 +34,14 @@ module.exports.AddLike = async(req,res) => {
 	return;     
      }
      const userDetail = await getUserDetailByReferenceNumber(reference_number);	
+     if(!post_id || post_id === ':post_id'){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Missing: post_id & must be cheked."
+        });
+        return;
+     }	  
      const payload = {
 	 user_id: userDetail._id,    
 	 email,
@@ -103,6 +111,14 @@ module.exports.RemoveLike = async(req,res) => {
 	return;     
      }
      const userDetail = await getUserDetailByReferenceNumber(reference_number);
+     if(!like_id || like_id === ':like_id'){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Missing: like_id & must be cheked."
+        });
+        return;        
+     }
      const payload = {
         email,
         reference_number,
@@ -159,6 +175,14 @@ module.exports.GetLikeCount = async(req,res) => {
         }); 
 	return;     
      }
+     if(!post_id || post_id === ':post_id'){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Missing: post_id & must be checked."
+        });
+        return;
+     }	  
      const response = await getLikeCount(post_id);
      if(response[0]){
         res.status(200).json({

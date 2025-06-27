@@ -18,6 +18,12 @@ module.exports = (sequelize, Sequelize) => {
     reference_number: {
       type: DataTypes.STRING(65),
     },
+    username: {
+      type: DataTypes.STRING(65),
+    },  
+    profile_image_url: {
+       type: DataTypes.TEXT,
+    },	  
     media_url: {
       type: DataTypes.TEXT,
     },
@@ -32,6 +38,10 @@ module.exports = (sequelize, Sequelize) => {
     gps_coordinates: {
       type: DataTypes.STRING(15),
       allowNull: true  	    
+    },
+    location_name: {
+      type: DataTypes.STRING(65),
+      allowNull: true
     },	  
     post_type: {
       type: DataTypes.ENUM('social-board','show-board','cross-list','chat-group','social-ai-board'),
@@ -51,11 +61,31 @@ module.exports = (sequelize, Sequelize) => {
     category: {
       type: DataTypes.STRING(35),
       allowNull: true
+    },
+    type: {
+      type: DataTypes.ENUM('image','video','other'),
+      defaultValue: 'other',	    
+      allowNull: false
     },	  
     created_at: {
       type: DataTypes.DATE,
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
+    is_liked: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false      
+    },
+    is_saved: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false	    
+    },
+    is_flagged: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false	    
+    },	  
     is_buy_enabled: {
       type: DataTypes.INTEGER,
       defaultValue: 1
@@ -69,8 +99,8 @@ module.exports = (sequelize, Sequelize) => {
       defaultValue: 1	    
     },	  
     is_public: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0
+      type: DataTypes.ENUM('everyone','friends'),
+      defaultValue: 'everyone'
     },	  
     is_deleted: {
       type: DataTypes.INTEGER,
@@ -98,9 +128,29 @@ module.exports = (sequelize, Sequelize) => {
             fields: ['category'],
             using: 'BTREE',
 	},
+        {
+            name: 'is_liked_index',
+            fields: ['is_liked'],
+            using: 'BTREE',
+        },
+        {
+            name: 'is_saved_index',
+            fields: ['is_saved'],
+            using: 'BTREE',
+        },
+        {
+            name: 'is_flagged_index',
+            fields: ['is_flagged'],
+            using: 'BTREE',
+        },
+	{
+            name: 'is_public_index',
+            fields: ['is_public'],
+            using: 'BTREE',
+	}, 	    
 	{
             name: 'flag_index',
-	    fields: ['is_public','is_deleted','is_buy_enabled','is_comment_allowed','is_minted_automatically']	
+	    fields: ['is_deleted','is_buy_enabled','is_comment_allowed','is_minted_automatically']	
 	}
     ],
     tableName: 'tbl_areax_wall',

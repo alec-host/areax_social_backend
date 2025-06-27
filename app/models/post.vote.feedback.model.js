@@ -10,6 +10,9 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    email: {
+      type: DataTypes.STRING(65),
+    },	  
     reference_number: {
       type: DataTypes.STRING(65),
     },
@@ -27,6 +30,11 @@ module.exports = (sequelize, Sequelize) => {
     }
   }, {
      indexes: [
+	{
+            name: 'email_vote_index',
+            fields: ['email'],
+            using: 'BTREE',
+	},     
         {
             name: 'reference_number_vote_index',
             fields: ['reference_number'],
@@ -39,8 +47,7 @@ module.exports = (sequelize, Sequelize) => {
     timestamps: false
   });
 
-  AreaXPostVoteFeedback.associate = (models) => {
-    console.log('BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB ',models);	  
+  AreaXPostVoteFeedback.associate = (models) => { 
     AreaXPostVoteFeedback.belongsTo(models.User, { foreignKey: 'user_id' });
     AreaXPostVoteFeedback.belongsTo(models.AreaXWall, { foreignKey: 'post_id' });
   };

@@ -7,14 +7,16 @@ module.exports.removeLike = async (likeData) => {
     const deletedRows = await Likes.destroy(
       {
         where: {
-          like_id: likeData.like_id
+          like_id: likeData.like_id,
+	  email: likeData.email,
+          reference_number: likeData.reference_number		
         },
       }
     );
 
     if (deletedRows > 0) {
       console.log(`Like with ID ${likeData.like_id} successfully deleted.`);
-      return [true,'Like deleted successfully.'];
+      return [true,'Like has been removed successfully.'];
     } else {
       console.log(`No matching comment found with ID ${likeData.like_id}.`);
       return [false,'No matching like found to delete.'];

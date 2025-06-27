@@ -8,9 +8,13 @@ const buyController = require("../controllers/buy.controller");
 const bidController = require("../controllers/bids.controller");
 const groupChatController = require("../controllers/group.chat.controller");
 const changeProfileStatusController = require("../controllers/user.profile.controller");
+const fileController = require("../controllers/file.controller");
+const flagController = require("../controllers/flag.controller");
+const reportController = require("../controllers/report.controller");
 
 const inputValidator = require("../validation/common.validation");
 
+const s3Upload = require("..//middleware/s3.bucket.upload");
 const fileHandler = require("../middleware/file.upload.handler");
 
 const auth = require("../middleware/auth");
@@ -80,6 +84,7 @@ router.get('/social-content',auth,inputValidator.getWallFeedValidator,wallContro
  *-file
  *-caption
  *-gps_coordinates
+ *-type
  *-is_buy_enabled
  *-is_comment_allowed
  *-is_minted_automatically
@@ -93,6 +98,7 @@ router.post('/social-content',auth,fileHandler.uploadMiddleware,inputValidator.s
  *-media_url
  *-caption
  *-gps_coordinates
+ *-type
  *-is_buy_enabled
  *-is_comment_allowed
  *-is_minted_automatically 
@@ -167,7 +173,7 @@ router.post('/group-share-content/url',auth,inputValidator.socialSharedMediaURLV
  *-post_id
  *
  * */
-router.post('/like',auth,inputValidator.addLikeCommentValidator,likeController.AddLike);
+router.post('/like',basicAuth,inputValidator.addLikeCommentValidator,likeController.AddLike);
 /*
  *
  *-email
@@ -175,7 +181,7 @@ router.post('/like',auth,inputValidator.addLikeCommentValidator,likeController.A
  *-like_id
  *
  * */
-router.delete('/like/:like_id',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
+router.delete('/like/:like_id',basicAuth,inputValidator.removeLikeValidator,likeController.RemoveLike);
 /*
  *-email
  *-reference_number
@@ -215,7 +221,14 @@ router.delete('/comment/:comment_id',auth,inputValidator.removeCommentValidator,
  *-post_id
  *
  * */
-router.get('/comment',auth,inputValidator.getLikeCommentValidator,commentController.GetCommentCount);
+router.get('/comment',auth,inputValidator.getLikeCommentValidator,commentController.GetComment);
+/*
+ *-email
+ *-reference_number
+ *-post_id
+ *
+ * */
+router.get('/comment/count',auth,inputValidator.getLikeCommentValidator,commentController.GetCommentCount);
 /*
  *
  *-email
@@ -393,8 +406,71 @@ router.get('/profile',auth,inputValidator.targetProfileValidator,friendControlle
  *-reference_number
  *-privacy_status
  *
- *
 */
 router.patch('/profile/privacy-status',auth,inputValidator.changePrivacyStatusValidator,changeProfileStatusController.ChangeProfileStatus);
+/*
+ *
+ *-email
+ *-reference_number
+ *-file
+ *
+*/
+router.post('/file/upload',/*inputValidator.changePrivacyStatusValidator,*/s3Upload.single('file'),fileController.uploadFile);
+/*
+ *
+ *-email
+ *-reference_number
+ *
+*/
+router.get('/files',/*inputValidator.changePrivacyStatusValidator,*/fileController.getFiles);
+/*
+ *
+ *-email
+ *-reference_number
+ *
+*/
+router.get('/file/:file_id',/*inputValidator.changePrivacyStatusValidator,*/fileController.getFile);
+/*
+ *
+ *-email
+ *-reference_number
+ *
+*/
+router.delete('/file/:file_id',/*inputValidator.changePrivacyStatusValidator,*/fileController.getFile);
+/*
+ *
+ *-email
+ *-reference_number
+ *-flag
+ *-post_id
+ *
+ * */
+router.patch('/toggle/like/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleLikeFlag);
+/*
+ *
+ *-email
+ *-reference_number
+ *-post_id
+ *
+ * */
+router.patch('/toggle/save/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleSaveFlag);
+/*
+ *
+ *-email
+ *-reference_number
+ *-post_id
+ *
+ * */
+router.patch('/toggle/report/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleReportFlag);
+/*
+ *
+ *-email
+ *-reference_number
+ *-vote type
+ *-feedback
+ *-post_id
+ *
+ * */
+router.post('/report',auth,inputValidator.postReportValidator,reportController.savePost);
 
 module.exports = router;

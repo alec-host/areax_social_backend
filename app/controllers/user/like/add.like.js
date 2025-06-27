@@ -13,7 +13,7 @@ module.exports.addLike = async (likeData) => {
       is_updated: 0, // Default value
     });
 
-    console.log('Like added successfully:', newLike);
+    //console.log('Like added successfully:', newLike);
     return [true,newLike];
   } catch (error) {
     console.error('Error adding like:', error.message);

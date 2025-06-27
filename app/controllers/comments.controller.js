@@ -229,3 +229,57 @@ module.exports.GetCommentCount = async(req,res) => {
         res.status(422).json({ success: false, error: true, message: errors.array() });
     }
 };
+
+module.exports.GetComment = async(req,res) => {
+  const errors = validationResult(req);
+  const { email, reference_number, post_id } = req.query;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+     return;	  
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });	     
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+     const response = await getCommentsByPostId(post_id);
+     if(response[0]){
+        res.status(200).json({
+            success: true,
+            error: false,
+            data: response[1],
+            message: `Comment[s] for post with post_id ${post_id}.` 
+        });
+     }else{
+        res.status(404).json({
+            success: false,
+            error: true,
+            data: [],
+            message: 'No comment[s].'
+        });
+     }
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+  }
+};
+
