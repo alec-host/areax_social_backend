@@ -23,6 +23,8 @@ module.exports.AddComment = async(req,res) => {
                         user_id: userDetails._id,
                         commentor_email: email,
                         commentor_reference_number: reference_number,
+			commentor_profile_url_image: userDetails.profile_picture_url,
+		        commentor_username: userDetails.username,	    
                         comment_text: comment,
 		    };		
 		    const response = await addComment(payload);

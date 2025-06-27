@@ -1,10 +1,14 @@
+const { db2 } = require("../../../models");
+
+const File = db2.files;
+
 module.exports.getPaginatedFiles = async (whereClause, limit, offset) => {
   try {
     const files = await File.findAndCountAll({
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
     if(files.count === 0) {
        return [false,'No matching files found'];	    

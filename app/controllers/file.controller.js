@@ -1,27 +1,34 @@
 const { validationResult } = require("express-validator");
 const s3 = require('../services/S3-BUCKET');
+const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+
 const { saveUploadedFile } = require('./user/file-upload/create.file');
 const { getUploadedFile } = require('./user/file-upload/get.file.by.id');
 const { getPaginatedFiles } = require('./user/file-upload/get.files.by.type');
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
-
+const { AWS_BUCKET_ACCESS_KEY_ID, AWS_BUCKET_SECRET_ACCESS_KEY, AWS_BUCKET_REGION } = require("../constants/app_constants");
 
 class FileController {
     // Upload file
     async uploadFile(req, res) {
         const errors = validationResult(req);
-        const { email, reference_number } = req.body;	    
-        try {
-            console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx ', req?.file);		
-            if (!req.file) {
-                return res.status(400).json({
-                    success: false,
-	            error: true,		
-                    message: 'No file uploaded'
-                });
+        const { email, reference_number } = req.body;   
+        try{ 
+            if(!errors.isEmpty()){
+               res.status(422).json({ success: false, error: true, message: errors.array() });
+               return;
+            }
+		
+            if(!req.file){
+               return res.status(400).json({
+                  success: false,
+	          error: true,		
+                  message: 'No file uploaded'
+               });
             }
 	    const email_found = await findUserCountByEmail(email);
+	
 	    if(email_found === 0){
                res.status(404).json({
                    success: false,
@@ -32,7 +39,7 @@ class FileController {
 	    }
 
             const reference_number_found = await findUserCountByReferenceNumber(reference_number);
-            if(reference_number_found > 0){
+            if(reference_number_found === 0){
                res.status(404).json({
                    success: false,
                    error: true,
@@ -42,29 +49,34 @@ class FileController {
 	    }
 
             const fileType = req.file.mimetype.startsWith('image/') ? 'image' : 'video';
-            console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx ');		
-
+           
             // Save file info to database	    
             const fileRecord = await saveUploadedFile({
 		email,
 		reference_number,    
-                original_name: req.file.originalname,
-                file_name: req.file.key,
-                file_url: req.file.location,
-                file_size: req.file.size,
-                mime_type: req.file.mimetype,
+                original_name: req?.file?.originalname,
+                file_name: req?.file?.key,
+                file_url: req?.file?.location,
+                file_size: req?.file?.size,
+                mime_type: req?.file?.mimetype,
                 file_type: fileType,
-                s3_key: req.file.key
+                s3_key: req?.file?.key
             });
-
-            res.status(201).json({
-                success: true,
-		error: false,
-		data: fileRecord,    
-                message: 'File uploaded successfully'
-            });
-        } catch(error){
-            console.error('Upload error:', error);
+            if(fileRecord[0]){
+                res.status(201).json({
+                    success: true,
+		    error: false,
+		    data: fileRecord[1],    
+                    message: 'File has been uploaded successfully.'
+                });
+	    }else{
+                res.status(400).json({
+                    success: true,
+                    error: false,
+                    message: fileRecord[1]
+                });
+	    }
+        }catch(error){
             res.status(500).json({
                 success: false,
 		error: true,    
@@ -75,13 +87,19 @@ class FileController {
 
     // Get all files
     async getFiles(req, res) {
-        try {
-            const { page = 1, limit = 10, fileType } = req.query;
+        try{
+	    const errors = validationResult(req);	
+            const { page = 1, limit = 10, file_type } = req.query;
             const offset = (page - 1) * limit;
 
+            if(!errors.isEmpty()){
+               res.status(422).json({ success: false, error: true, message: errors.array() });
+               return;
+            }
+
             const whereClause = {};
-            if (fileType) {
-                whereClause.fileType = fileType;
+            if (file_type) {
+                whereClause.fileType = file_type;
             }
 
             const files = await getPaginatedFiles(whereClause,parseInt(limit),parseInt(offset));
@@ -99,15 +117,14 @@ class FileController {
 		error: false,    
                 data: files[1].rows,
                 pagination: {
-                    currentPage: parseInt(page),
-                    totalPages: Math.ceil(files[1].count / limit),
-                    totalItems: files[1].count,
-                    itemsPerPage: parseInt(limit)
+                    current_page: parseInt(page),
+                    total_pages: Math.ceil(files[1].count / limit),
+                    total_items: files[1].count,
+                    items_per_page: parseInt(limit)
                 },
 		message:'List of files'     
             });
-        } catch (error) {
-            console.error('Get files error:', error);
+        }catch(error){
             res.status(500).json({
                 success: false,
 		error: true,    
@@ -119,10 +136,16 @@ class FileController {
     // Get single file
     async getFile(req, res) {
         try {
-            const { email, reference_number } = req.body;		
-            const { id } = req.params;
-          
-            const file = await getUploadedFile(id);
+	    const errors = validationResult(req);	
+            const { email, reference_number } = req.query;		
+            const { file_id } = req.params;
+ 
+            if(!errors.isEmpty()){
+               res.status(422).json({ success: false, error: true, message: errors.array() });
+               return;
+            }
+		
+            const file = await getUploadedFile(file_id);
 
             if (!file[0]) {
                 return res.status(404).json({
@@ -143,7 +166,7 @@ class FileController {
             }
 
             const reference_number_found = await findUserCountByReferenceNumber(reference_number);
-            if(reference_number_found > 0){
+            if(reference_number_found === 0){
                res.status(404).json({
                    success: false,
                    error: true,
@@ -156,7 +179,7 @@ class FileController {
                 success: true,
 	        error: false,	    
                 data: file,
-		messaage: 'File'    
+		messaage: 'File list'    
             });
         } catch (error) {
             console.error('Get file error:', error);
@@ -171,10 +194,16 @@ class FileController {
     // Delete file
     async deleteFile(req, res) {
         try {
+            const errors = validationResult(req);		
 	    const { email, reference_number } = req.body;
-            const { id } = req.params;
+            const { file_id } = req.params;
            
-            const file = await getUploadedFile(id);
+            if(!errors.isEmpty()){
+               res.status(422).json({ success: false, error: true, message: errors.array() });
+               return;
+            }
+		
+            const file = await getUploadedFile(file_id);
 
             if (!file[0]) {
                res.status(404).json({
@@ -196,7 +225,7 @@ class FileController {
             }
 
             const reference_number_found = await findUserCountByReferenceNumber(reference_number);
-            if(reference_number_found > 0){
+            if(reference_number_found === 0){
                res.status(404).json({
                    success: false,
                    error: true,
@@ -206,10 +235,12 @@ class FileController {
             }
 		
             // Delete from S3
-            await s3.deleteObject({
-                Bucket: process.env.AWS_S3_BUCKET,
-                Key: file[1].s3Key
-            }).promise();
+            const command = new DeleteObjectCommand({
+               Bucket: 'weaiu',
+               Key: file[1].s3_key,
+            });
+
+            const response = await s3.send(command);
 
             // Delete from database
             await file[1].destroy();

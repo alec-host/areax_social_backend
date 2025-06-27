@@ -10,6 +10,8 @@ module.exports.addComment = async (commentData) => {
       reference_number: commentData.reference_number,
       commentor_email: commentData.commentor_email || null,
       commentor_reference_number: commentData.commentor_reference_number,
+      commentor_profile_url_image: commentData.commentor_profile_url_image,
+      commentor_username: commentData.commentor_username || null,	    
       comment_text: commentData.comment_text,
       created_at: new Date(),	    
       is_edited: 0, // Default value

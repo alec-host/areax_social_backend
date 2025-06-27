@@ -22,8 +22,16 @@ module.exports = (sequelize, Sequelize) => {
     commentor_reference_number: {
       	type: DataTypes.STRING(65),
     },
+    commentor_profile_url_image: {
+        type: DataTypes.STRING(2048),
+        allowNull: true
+    },	  
+    commentor_username: {
+        type: DataTypes.STRING(65),
+        allowNull: true
+    },	  
     comment_text: {
-      	type: DataTypes.STRING(140),
+      	type: DataTypes.STRING(240),
       	allowNull: false,
     },
     created_at: {

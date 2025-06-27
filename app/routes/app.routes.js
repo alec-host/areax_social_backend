@@ -14,7 +14,7 @@ const reportController = require("../controllers/report.controller");
 
 const inputValidator = require("../validation/common.validation");
 
-const s3Upload = require("..//middleware/s3.bucket.upload");
+const { s3UploadMiddleware } = require("../middleware/s3.bucket.upload");
 const fileHandler = require("../middleware/file.upload.handler");
 
 const auth = require("../middleware/auth");
@@ -415,28 +415,32 @@ router.patch('/profile/privacy-status',auth,inputValidator.changePrivacyStatusVa
  *-file
  *
 */
-router.post('/file/upload',/*inputValidator.changePrivacyStatusValidator,*/s3Upload.single('file'),fileController.uploadFile);
+router.post('/file/upload',auth,inputValidator.uploadS3Validator,s3UploadMiddleware,fileController.uploadFile);
+/*
+ *
+ *-email
+ *-reference_number
+ *-file_type
+ *-page
+ *-limit
+ *
+*/
+router.get('/file/fetch',auth,inputValidator.getUploadedFilesValidator,fileController.getFiles);
+/*
+ *
+ *-email
+ *-reference_number
+ *-id
+ *
+*/
+router.get('/file/:file_id',auth,inputValidator.getUploadedFileValidator,fileController.getFile);
 /*
  *
  *-email
  *-reference_number
  *
 */
-router.get('/files',/*inputValidator.changePrivacyStatusValidator,*/fileController.getFiles);
-/*
- *
- *-email
- *-reference_number
- *
-*/
-router.get('/file/:file_id',/*inputValidator.changePrivacyStatusValidator,*/fileController.getFile);
-/*
- *
- *-email
- *-reference_number
- *
-*/
-router.delete('/file/:file_id',/*inputValidator.changePrivacyStatusValidator,*/fileController.getFile);
+router.delete('/file/:file_id',auth,inputValidator.deleteUploadedFileValidator,fileController.deleteFile);
 /*
  *
  *-email
@@ -461,7 +465,7 @@ router.patch('/toggle/save/:post_id',auth,inputValidator.togglFlagValidator,flag
  *-post_id
  *
  * */
-router.patch('/toggle/report/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleReportFlag);
+router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidator,flagController.toggleReportFlag);
 /*
  *
  *-email

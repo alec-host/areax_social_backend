@@ -600,6 +600,38 @@ const postReportValidator = [
     .isString().withMessage('feedback must be text'),
 ];
 
+const uploadS3Validator = [
+   body('email', 'Email cannot be Empty').not().isEmpty(),
+   body('email', 'Invalid email').isEmail(),
+   body('reference_number', 'Reference number must be provided').not().isEmpty(),
+];
+
+const getUploadedFilesValidator = [
+   query('email', 'Email cannot be Empty').not().isEmpty(),
+   query('email', 'Invalid email').isEmail(),
+   query('reference_number', 'Reference number must be provided').not().isEmpty(),
+   query('page')
+      .exists({ checkFalsy: true }).withMessage('page must be provided')
+      .isInt({ min: 1 }).withMessage('page must be an integer >= 1'),
+   query('limit')
+      .exists({ checkFalsy: true }).withMessage('limit must be provided')
+      .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),
+];
+
+const getUploadedFileValidator = [
+   query('email', 'Email cannot be Empty').not().isEmpty(),
+   query('email', 'Invalid email').isEmail(),
+   query('reference_number', 'Reference number must be provided').not().isEmpty(),
+   param('file_id', 'file_id must be provided').not().isEmpty(),
+];
+
+const deleteUploadedFileValidator = [
+   body('email', 'Email cannot be Empty').not().isEmpty(),
+   body('email', 'Invalid email').isEmail(),
+   body('reference_number', 'Reference number must be provided').not().isEmpty(),
+   param('file_id', 'file_id must be provided').not().isEmpty(),
+];
+
 /*
 const formDataValidator = [
     check('email', 'Email cannot be Empty').not().isEmpty(),
@@ -622,5 +654,7 @@ module.exports = {
     socialWallURLValidator,deletePostValidator,removeLikeCommentValidator,
     removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator,
     socialSharedMediaURLValidator,singleSocialSharedUploadValidator,
-    socialAiMediaURLValidator,togglFlagValidator,postReportValidator	
+    socialAiMediaURLValidator,togglFlagValidator,postReportValidator,
+    uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
+    deleteUploadedFileValidator	
 };

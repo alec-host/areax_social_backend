@@ -47,20 +47,31 @@ const s3Upload = multer({
 	      console.log(file);	
               const ext = path.extname(file.originalname);
               //const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
-	      const fileName = `test-${Date.now()}.${ext}`;
+	      const fileName = `test-${Date.now()}${ext}`;
 	      console.log(fileName);	
-              cb(null, fileName);
-	      console.log('dddddd');	   
+              cb(null, fileName);  
 	   }catch(error){
               console.error('Key generation error:', error);
               cb(error);		   
 	   }
         }
     }),
-    //fileFilter: fileFilter,
-    //limits: {
-      //fileSize: 50 * 1024 * 1024
-    //}
+    fileFilter: fileFilter,
+    limits: {
+      fileSize: 50 * 1024 * 1024
+    }
 });
 
-module.exports = s3Upload;
+module.exports.s3UploadMiddleware = (req, res, next) => {
+   s3Upload.single('file')(req, res, (err) => {
+      if (err) {
+         res.status(400).json({
+             success: false,
+             error: true,
+             message: `Error: ${err.message}`
+         });
+         return;
+      }
+      next();
+   });
+};

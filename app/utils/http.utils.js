@@ -51,4 +51,31 @@ const httpRemoveLikePost = async (payload) => {
   }
 };
 
-module.exports = { httpAddLikePost, httpRemoveLikePost };
+const httpReportContentPost = async (payload) => {
+  try {
+    const email = payload.email;
+    const reference_number = payload.reference_number;
+    const flag = payload.flag;	  
+    const post_id = parseInt(payload.post_id);	  
+    const url = `https://api.projectw.ai/social/api/v1/toggle/report/${post_id}`;
+    console.log(BASIC_AUTH_USERNAME, BASIC_AUTH_PASSWORD);	  
+    const response = await axios({
+      method: 'patch',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {
+         'Authorization': `Basic ${basicAuth}`,
+         'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({ email, reference_number, flag })
+    });
+
+    return [true, response.data];
+  } catch (error) {
+    const err =  error?.message || error.response?.data;	  
+    console.error('Flagging Failed:', err);
+    return [false, err || 'Request failed'];
+  }
+};
+
+module.exports = { httpAddLikePost, httpRemoveLikePost, httpReportContentPost };
