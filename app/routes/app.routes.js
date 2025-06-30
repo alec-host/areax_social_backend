@@ -112,7 +112,7 @@ router.post('/social-content/url',auth,inputValidator.socialWallURLValidator,wal
  *-post_id
  *
  * */
-router.delete('/social-content/:post_id',inputValidator.deletePostValidator,wallController.DeleteSocialPost);
+router.delete('/social-content/:post_id',auth,inputValidator.deletePostValidator,wallController.DeleteSocialPost);
 /*
  *
  *-email
