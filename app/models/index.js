@@ -30,7 +30,10 @@ db2.groups = require("./groups.model")(sequelize2,Sequelize);
 db2.members = require("./group.members.model")(sequelize2,Sequelize);
 db2.messages = require("./group.messages.model")(sequelize2,Sequelize);
 
+db2.files = require("./file.model.js")(sequelize2,Sequelize);
 db2.queued_friends_requests = require("./request.friend.model")(sequelize2,Sequelize);
+db2.report_post = require("./post.vote.feedback.model")(sequelize2,Sequelize);
+
 
 //console.log('AM HERE, AM HERE');
 (async() => {

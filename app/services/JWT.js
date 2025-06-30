@@ -7,7 +7,7 @@ module.exports.accessToken = (data) => {
 };
 
 module.exports.refreshToken = (data) => {
-  const refreshToken = jwt.sign(data,JWT_REFRESH_SECRET,{ expiresIn: '7d' });
+  const refreshToken = jwt.sign(data,JWT_REFRESH_SECRET,{ expiresIn: '14d' });
 
   return refreshToken;
 };

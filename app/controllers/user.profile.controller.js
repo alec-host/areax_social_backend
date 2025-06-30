@@ -38,22 +38,19 @@ module.exports.ChangeProfileStatus = async(req,res) => {
            username: BASIC_CORE_AUTH_USERNAME,
            password: BASIC_CORE_AUTH_PASSWORD 
         };
-
+        
         const data = {
            email: email,
            reference_number: reference_number,
            privacy_status: privacy_status
         };
-
         try{
            const response = await axios.post(url, JSON.stringify(data), {
               auth: auth,
-              eaders: { "Content-Type": "application/json" }
+              headers: { "Content-Type": "application/json" }
            });
-
            const excludedKeys = ["tier_reference_number","email_verified","phone_verified","created_at"];
-	   const filteredProfileData = filterJsonAttributes((response.data.data),excludedKeys);    
-
+	   const filteredProfileData = filterJsonAttributes((response.data.data),excludedKeys);
            res.status(200).json({
                success: true,
                error: false,
@@ -61,7 +58,7 @@ module.exports.ChangeProfileStatus = async(req,res) => {
                message: "Profile privacy status has been updated."
            }); 
         }catch(error){  
-           console.error("Error:", error.response ? error.response.data : error.message);
+           console.error(error.message);
            res.status(error.response.status).json({
                success: false,
                error: true,
@@ -72,6 +69,7 @@ module.exports.ChangeProfileStatus = async(req,res) => {
      postData(); 		
   }catch(e){	
      if(e){
+	console.log(e);     
         res.status(500).json({
             success: false,
             error: true,

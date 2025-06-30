@@ -29,12 +29,31 @@ const singleSocialWallUploadValidator = [
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
     body('caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Caption must not exceed 250 characters.'),
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
         .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('location_name', 'Missing: location_name must be checked').not().isEmpty(),
+    body('is_public')
+        .exists({ checkFalsy: true })
+        .withMessage('Missing: is_public must be checked')
+        .bail()
+        .isIn(['everyone', 'friends', 'private'])
+        .withMessage('is_public must be either "everyone", "friends", "private"'),	
+    body('type')
+	.optional({ checkFalsy: true }) // allow missing or empty fields
+        .customSanitizer(value => {
+            return value ? value : 'other'; // default to 'other' if not provided
+        })
+        .custom(value => {
+            const allowed = ['image', 'video', 'other'];
+            if(!allowed.includes(value)) {
+               throw new Error('Invalid type: must be "image", "video", or empty (defaults to "other")');
+            }
+            return true;
+        }),	
     body('is_buy_enabled')
 	.isInt({ min: 0, max: 1 })
         .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
@@ -65,12 +84,51 @@ const singleSocialUploadValidator = [
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),	
     body('caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Caption must not exceed 250 characters.'),
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
         .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),	
+    body('is_public')
+        .exists({ checkFalsy: true })
+        .withMessage('Missing: is_public must be checked')
+        .bail()
+        .isIn(['everyone', 'friends', 'private'])
+        .withMessage('is_public must be either "everyone", "friends", "private"'),	
+    (req, res, next) => {
+        if(!req.file){
+            //throw new Error('No file uploaded');
+            return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+        }
+        const validFormats = ['.mp4','.jpeg','.jpg','.png','.webp'];
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        if(!validFormats.includes(ext)){
+            //throw new Error('Invalid file format. Only .jpeg,.webp are allowed.');
+            return res.status(400).json({ success: false, error: true, message: 'Invalid file format. Only MP4,JPEG,JPG,PNG,and WEBP are allowed.' });
+        }
+        next();
+    }
+];
+
+const singleSocialSharedUploadValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('caption')
+        .optional()
+        .isLength({ max: 5250 })
+        .withMessage('Caption must not exceed 250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('is_public')
+        .exists({ checkFalsy: true })
+        .withMessage('Missing: is_public must be checked')
+        .bail()
+        .isIn(['everyone', 'friends', 'private'])
+        .withMessage('is_public must be either "everyone", "friends", "private"'),
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -127,6 +185,12 @@ const socialWallURLValidator = [
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
         .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('is_public')
+        .exists({ checkFalsy: true })
+        .withMessage('Missing: is_public must be checked')
+        .bail()
+        .isIn(['everyone', 'friends', 'private'])
+        .withMessage('is_public must be either "everyone", "friends", "private"'),	
     body('is_buy_enabled')
         .isInt({ min: 0, max: 1 })
         .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
@@ -145,7 +209,7 @@ const singleGroupMgmtUploadValidator = [
     body('group_name', 'Missing: group_name must be checked').not().isEmpty(),
     body('group_caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Missing: group_caption must not exceed 250 characters.'),
     (req, res, next) => {
         if(!req.file){
@@ -172,8 +236,21 @@ const singleShowUploadValidator = [
         .withMessage('item_amount must be greater than 0 if provided.'),
     body('caption')
         .optional()
-        .isLength({ max: 250 })
+        .isLength({ max: 5250 })
         .withMessage('Caption must not exceed 250 characters.'),
+    body('location_name', 'Missing: location_name must be checked').not().isEmpty(),	
+    body('type')
+        .optional({ checkFalsy: true }) 
+        .customSanitizer(value => {
+            return value ? value : 'other';
+        })
+        .custom(value => {
+            const allowed = ['image', 'video', 'other'];
+            if(!allowed.includes(value)) {
+               throw new Error('Invalid type: must be "image", "video", or empty (defaults to "other")');
+            }
+            return true;
+        }),	
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
@@ -185,7 +262,16 @@ const singleShowUploadValidator = [
     body('close_time')
         .optional()
         .matches(/^(1?[1-9]|2[0-4])\s?hours$|^(1?[1-9]|[1-2][0-9]|30)\s?days$|^(1?[1-9]|1[0-2])\s?months$/)
-        .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months".'),	
+        .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months".'),
+    body('is_buy_enabled')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
+    body('is_comment_allowed')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
+    body('is_minted_automatically')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -250,6 +336,43 @@ const socialMediaURLValidator = [
         .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),	
 ];
 
+const socialAiMediaURLValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('media_url','Media url must be provided').not().isEmpty(),
+    body('category','Category must be provided').not().isEmpty(),	
+    body('caption')
+        .optional() // Makes caption optional
+        .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
+        .withMessage('Caption must not exceed 5250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+];
+
+const socialSharedMediaURLValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('media_url','Media url must be provided').not().isEmpty(),
+    body('caption')
+        .optional() // Makes caption optional
+        .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
+        .withMessage('Caption must not exceed 5250 characters.'),
+    body('gps_coordinates')
+        .optional()
+        .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
+    body('is_public')
+        .exists({ checkFalsy: true })
+        .withMessage('Missing: is_public must be checked')
+        .bail()
+        .isIn(['everyone', 'friends', 'private'])
+        .withMessage('is_public must be either "everyone", "friends", "private"'),	
+];
+
 const socialAIMediaURLValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
@@ -289,7 +412,7 @@ const showMediaURLValidator = [
     body('media_url', 'Media url must be provided').not().isEmpty(),
     body('caption')
         .optional() // Makes caption optional
-        .isLength({ max: 250 }) // Validates that length does not exceed 250 characters
+        .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
         .withMessage('Caption must not exceed 250 characters.'),
     body('item_amount')
         .optional() // Makes item_amount optional
@@ -307,6 +430,15 @@ const showMediaURLValidator = [
         .optional()
 	.matches(/^(1?[1-9]|2[0-4])\s?hours$|^(1?[1-9]|[1-2][0-9]|30)\s?days$|^(1?[1-9]|1[0-2])\s?months$/)
         .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months'),
+    body('is_buy_enabled')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
+    body('is_comment_allowed')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
+    body('is_minted_automatically')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
 ];
 
 const deletePostValidator = [
@@ -342,7 +474,9 @@ const removeLikeValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    param('like_id', 'Like id must be provided').not().isEmpty(),
+    param('like_id')	
+	.exists({ checkNull: true, checkFalsy: true })
+	.withMessage('Like id must be provided and not be empty')
 ];
 
 const editCommentValidator = [
@@ -357,7 +491,9 @@ const removeCommentValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    param('comment_id', 'Comment id must be provided').not().isEmpty(),
+    param('comment_id')
+	.exists({ checkNull: true, checkFalsy: true })	
+	.withMessage('Comment id must be provided and not be empty')
 ];
 
 const editItemValidator = [
@@ -430,6 +566,72 @@ const targetProfileValidator = [
     query('target_reference_number', 'target_reference_number must be provided').not().isEmpty(),
 ];
 
+const togglFlagValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    param('post_id', 'Post id must be provided').not().isEmpty(),
+    body('flag')	
+    .exists().withMessage('Flag must be provided')
+    .bail()
+    .customSanitizer(value => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        if (value.toLowerCase() === 'true') return true;
+        if (value.toLowerCase() === 'false') return false;
+      }
+      return value;
+    })
+    .isBoolean().withMessage('Flag must be a boolean value: true or false')
+];
+
+const postReportValidator = [ 
+  body('email', 'Email cannot be Empty').not().isEmpty(),
+  body('email', 'Invalid email').isEmail(),
+  body('reference_number', 'Reference number must be provided').not().isEmpty(),
+  body('vote_type')
+    .exists({ checkFalsy: true }).withMessage('vote_type is required')
+    .isIn(['upvote', 'downvote']).withMessage('vote_type must be either "upvote" or "downvote"'),
+  body('post_id')
+    .exists({ checkFalsy: true }).withMessage('post_id must be provided')
+    .isInt().withMessage('post_id must be an integer'),
+  body('feedback')
+    .optional()
+    .isString().withMessage('feedback must be text'),
+];
+
+const uploadS3Validator = [
+   body('email', 'Email cannot be Empty').not().isEmpty(),
+   body('email', 'Invalid email').isEmail(),
+   body('reference_number', 'Reference number must be provided').not().isEmpty(),
+];
+
+const getUploadedFilesValidator = [
+   query('email', 'Email cannot be Empty').not().isEmpty(),
+   query('email', 'Invalid email').isEmail(),
+   query('reference_number', 'Reference number must be provided').not().isEmpty(),
+   query('page')
+      .exists({ checkFalsy: true }).withMessage('page must be provided')
+      .isInt({ min: 1 }).withMessage('page must be an integer >= 1'),
+   query('limit')
+      .exists({ checkFalsy: true }).withMessage('limit must be provided')
+      .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),
+];
+
+const getUploadedFileValidator = [
+   query('email', 'Email cannot be Empty').not().isEmpty(),
+   query('email', 'Invalid email').isEmail(),
+   query('reference_number', 'Reference number must be provided').not().isEmpty(),
+   param('file_id', 'file_id must be provided').not().isEmpty(),
+];
+
+const deleteUploadedFileValidator = [
+   body('email', 'Email cannot be Empty').not().isEmpty(),
+   body('email', 'Invalid email').isEmail(),
+   body('reference_number', 'Reference number must be provided').not().isEmpty(),
+   param('file_id', 'file_id must be provided').not().isEmpty(),
+];
+
 /*
 const formDataValidator = [
     check('email', 'Email cannot be Empty').not().isEmpty(),
@@ -450,5 +652,9 @@ module.exports = {
     getFriendDetailsValidator,changePrivacyStatusValidator,	
     targetProfileValidator,acceptFriendValidator,singleSocialWallUploadValidator,
     socialWallURLValidator,deletePostValidator,removeLikeCommentValidator,
-    removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator	
+    removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator,
+    socialSharedMediaURLValidator,singleSocialSharedUploadValidator,
+    socialAiMediaURLValidator,togglFlagValidator,postReportValidator,
+    uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
+    deleteUploadedFileValidator	
 };
