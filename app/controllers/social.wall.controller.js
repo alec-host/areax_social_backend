@@ -144,7 +144,7 @@ module.exports.SaveShowContent = async(req,res) => {
                         user_id: userDetail._id,
                         email,
                         reference_number,
-			username: userDetail.display_name,     
+			username: userDetail.display_name,
                         profile_image_url: userDetail.profile_picture_url,			     
                         media_url: image_url || media_url,
                         caption,
@@ -229,7 +229,8 @@ module.exports.SaveSocialContent = async(req,res) => {
 			is_buy_enabled: is_buy_enabled,
 			is_comment_allowed: is_comment_allowed,
 			is_minted_automatically: is_minted_automatically     
-		     };		
+		     };
+		 
 		     const response = await saveSocialPost(payload);
 		     if(response[0]){	
                         res.status(200).json({

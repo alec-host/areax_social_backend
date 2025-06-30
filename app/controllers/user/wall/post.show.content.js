@@ -9,7 +9,7 @@ module.exports.saveShowPost = async(data) => {
       email: data.email || null,
       reference_number: data.reference_number,
       username: data.username,
-      profile_image_url: data.profile_image_url,	    
+      profile_image_url: data.profile_image_url,
       media_url: data.media_url,
       description: data.caption || '',
       location_name: data.location_name || '',	    
