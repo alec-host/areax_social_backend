@@ -14,8 +14,10 @@ module.exports.getCommentsByPostId = async (postId, limit = 10, offset = 0) => {
       limit: limit,
       offset: offset,
     });
-
     console.log(`Comments retrieved for post ID ${postId}`);
+    if(comments.length === 0){
+       return [false,'No comments'];	    
+    }	  
     return [true,comments];
   } catch (error) {
     console.error('Error fetching comments:', error.message);

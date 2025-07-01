@@ -20,8 +20,7 @@ const verifyToken = (req, res, next) => {
                    message: "Invalid Token Format",
                });
             }
-            const resp = jwtVerifyToken(token.split(" ")[1]);
-	    console.log("JWT Verify Response:", resp);	
+            const resp = jwtVerifyToken(token.split(" ")[1]); 	
             if(!resp[0]){
                 return res.status(401).json({
                     success: false,
