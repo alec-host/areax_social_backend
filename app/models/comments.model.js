@@ -7,6 +7,15 @@ module.exports = (sequelize, Sequelize) => {
       	autoIncrement: true,
       	primaryKey: true,
     },
+    parent_comment_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+           model: 'tbl_areax_comments',
+           key: 'comment_id'
+        },
+       onDelete: 'CASCADE'
+    },	  
     post_id: {
       	type: DataTypes.INTEGER,
       	allowNull: false,

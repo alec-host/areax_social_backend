@@ -24,6 +24,9 @@ db2.bids = require("./bids.model")(sequelize2,Sequelize);
 db2.comments = require("./comments.model")(sequelize2,Sequelize);
 db2.likes = require("./likes.model")(sequelize2,Sequelize);
 db2.shares = require("./shares.model")(sequelize2,Sequelize);
+
+db2.comments.likes = require("./comment.likes.model")(sequelize2,Sequelize);
+
 db2.materialized = require("./materialized.model")(sequelize2,Sequelize);
 
 db2.groups = require("./groups.model")(sequelize2,Sequelize);
