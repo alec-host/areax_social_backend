@@ -632,6 +632,22 @@ const deleteUploadedFileValidator = [
    param('file_id', 'file_id must be provided').not().isEmpty(),
 ];
 
+const commentReplyValidator = [
+   body('email', 'Email cannot be Empty').not().isEmpty(),
+   body('email', 'Invalid email').isEmail(),
+   body('reference_number', 'Reference number must be provided').not().isEmpty(),
+   body('reply', 'reply must be provided').not().isEmpty(),
+   body('post_id', 'post id must be provided').not().isEmpty(),
+   body('comment_id', 'comment id must be provided').not().isEmpty(),	
+];
+
+const getCommentReplyValidator = [
+   query('email', 'Email cannot be Empty').not().isEmpty(),
+   query('email', 'Invalid email').isEmail(),
+   query('reference_number', 'Reference number must be provided').not().isEmpty(),
+   query('comment_id', 'comment_id must be provided').not().isEmpty(),
+];
+
 /*
 const formDataValidator = [
     check('email', 'Email cannot be Empty').not().isEmpty(),
@@ -656,5 +672,5 @@ module.exports = {
     socialSharedMediaURLValidator,singleSocialSharedUploadValidator,
     socialAiMediaURLValidator,togglFlagValidator,postReportValidator,
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
-    deleteUploadedFileValidator	
+    deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator
 };

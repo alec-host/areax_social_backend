@@ -13,7 +13,7 @@ module.exports.saveSocialPost = async (data) => {
     }
 
     data.item_amount = data.item_amount || 0;
-    console.log('FFFFFFFFFF SOCIAL POST',data);
+    
     const newPost = await Wall.create({
       user_id: data.user_id,
       email: data.email || null,

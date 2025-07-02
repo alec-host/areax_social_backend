@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize, Sequelize) => {
   const CommentLike = sequelize.define('CommentLike', {
-    id: {
+    like_id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -41,7 +41,7 @@ module.exports = (sequelize, Sequelize) => {
             using: 'BTREE',
         },
     ],	  
-    tableName: 'tbl_comment_likes',
+    tableName: 'tbl_areax_comment_likes',
     timestamps: false,
     collate: 'utf8mb4_general_ci',
     engine: 'InnoDB',	  

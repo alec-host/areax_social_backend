@@ -476,5 +476,23 @@ router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidat
  *
  * */
 router.post('/report',auth,inputValidator.postReportValidator,reportController.savePost);
+/*
+ *
+ *-email
+ *-reference_number
+ *-reply
+ *-post_id
+ *-comment_id
+ *
+ * */
+router.post('/comment/reply',auth,inputValidator.commentReplyValidator,commentController.AddCommentReply);
+/*
+ *
+ *-email
+ *-reference_number
+ *-comment_id
+ *
+ * */
+router.get('/comment/reply',auth,inputValidator.getCommentReplyValidator,commentController.GetCommentReplies);
 
 module.exports = router;

@@ -15,7 +15,7 @@ app.use(express.json());
 
 app.use(morgan('tiny'));
 
-db2.sequelize.sync({ /*force: false, alter: true */ })
+db2.sequelize.sync(/*{ force: false, alter: true  }*/)
   .then(() => {
    console.log("Synced db.");
 })

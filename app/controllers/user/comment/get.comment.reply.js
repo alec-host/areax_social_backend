@@ -2,26 +2,25 @@ const { db2 } = require("../../../models");
 
 const Comments = db2.comments;
 
-module.exports.getCommentsByPostId = async (postId, limit = 10, offset = 0) => {
+module.exports.getCommentRepliesByCommentId = async (commentId, limit = 10, offset = 0) => {
   try {
-    const comments = await Comments.findAll({
+    const commentReplies = await Comments.findAll({
       where: {
-        post_id: postId,
+        parent_comment_id: commentId,
         is_deleted: 0,
-	parent_comment_id: null     
       },
       attributes: ['comment_id', 'commentor_email', 'commentor_reference_number','commentor_profile_url_image', 'commentor_username', 'comment_text', 'created_at', 'is_edited'],
       order: [['created_at', 'DESC']],
       limit: limit,
       offset: offset,
     });
-    console.log(`Comments retrieved for post ID ${postId}`);
-    if(comments.length === 0){
-       return [false,'No comments'];	    
-    }	  
-    return [true,comments];
+    console.log(`Comments reply retrieved for comment ID ${commentId}`);
+    if(commentReplies.length === 0){
+       return [false,'No comment replies'];
+    }
+    return [true,commentReplies];
   } catch (error) {
-    console.error('Error fetching comments:', error.message);
+    console.error('Error fetching comment replies:', error.message);
     return [false,error.message];
   }
 };
