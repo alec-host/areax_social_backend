@@ -11,7 +11,7 @@ const { removeSocialPost } = require("./user/wall/remove.social.post");
 const { saveShowOpenBidPost,saveShowClosedBidPost } = require("./user/wall/post.show.bid.content");
 const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 const { addTimeToCurrentDate } = require("../utils/future.date.time");
-const { likedPost } = require("../utils/liked.post");
+const { likedSavedReportedPost } = require("../utils/liked.saved.reported.post");
 const { getUserLikes } = require("./user/like/get.user.likes");
 const { getUserSavedPosts } = require("./user/saved/get.user.saved.post");
 const { getUserReportedPosts } = require("./user/wall/get.user.reported.posts");
@@ -47,7 +47,7 @@ module.exports.GetWallContent = async(req,res) => {
      const likeresp = await getUserLikes(email,reference_number);
      const savedPostResp = await getUserSavedPosts(email,reference_number);
      const reportedPostResp = await getUserReportedPosts(email,reference_number);
-     const socialPosts = await likedPost(postResp[1].data,likeresp[1],savedPostResp[1],reportedPostResp[1]);		  
+     const socialPosts = await likedSavedReportedPost(postResp[1].data,likeresp[1],savedPostResp[1],reportedPostResp[1]);		  
      if(postResp[0]){
         res.status(200).json({
             success: true,
