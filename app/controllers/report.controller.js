@@ -1,7 +1,7 @@
 const { validationResult } = require("express-validator");
 
-const { getPostFlaggedStatusByPostId } = require("./user/wall/flagged.post.status");
-const { saveFlaggingReport } = require('./user/wall/report.social.content');
+//const { getPostFlaggedStatusByPostId } = require("./user/wall/flagged.post.status");
+const { saveReportedPost } = require('./user/wall/save.reported.post');
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
@@ -38,7 +38,8 @@ class ReportPostController {
             });
             return;
          }
-	 const userDetail = await getUserDetailByReferenceNumber(reference_number);     
+	 const userDetail = await getUserDetailByReferenceNumber(reference_number);
+	 /*     
          const postStatus = await getPostFlaggedStatusByPostId(post_id);
 	 if(postStatus.is_flagged === false){  
             const httpResponse = await httpReportContentPost({ email, reference_number, post_id, flag: true });
@@ -58,7 +59,7 @@ class ReportPostController {
 	       feedback,
 	       post_id 
 	    };
-	    const response = await saveFlaggingReport(payload);   
+	    const response = await saveReportedPost(payload);   
 	    if(response[0]){
                res.status(201).json({
                    success: true,
@@ -72,7 +73,8 @@ class ReportPostController {
                    error: true,
                    message: response[1]
                });
-	    }    
+	    } 
+	    */
 	 }else{
             res.status(400).json({
                 success: false,

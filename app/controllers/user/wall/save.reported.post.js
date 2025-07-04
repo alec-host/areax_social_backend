@@ -2,7 +2,7 @@ const { db2 } = require("../../../models");
 
 const ReportPost = db2.report_post;
 
-module.exports.saveFlaggingReport = async (data) => {
+module.exports.saveReportedPost = async (data) => {
   try {
 
     const newPost = await ReportPost.create({
