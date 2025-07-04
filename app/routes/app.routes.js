@@ -509,7 +509,7 @@ router.get('/comment/reply',auth,inputValidator.getCommentReplyValidator,comment
  *-post_id
  *
  * */
-router.post('/save',auth,inputValidator.togglFlagValidator,savedPostController.addSavedPost);
+router.post('/save',/*auth,*/inputValidator.addSavedPostValidator,savedPostController.addSavedPost);
 /*
  *
  *-email
@@ -517,6 +517,6 @@ router.post('/save',auth,inputValidator.togglFlagValidator,savedPostController.a
  *-post_id
  *
  * */
-router.delete('/save/:post_id',auth,inputValidator.deletePostValidator,savedPostController.removeSavedPost);
+router.delete('/save/:post_id',/*auth,*/inputValidator.deletePostValidator,savedPostController.removeSavedPost);
 
 module.exports = router;

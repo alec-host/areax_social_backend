@@ -648,6 +648,14 @@ const getCommentReplyValidator = [
    query('comment_id', 'comment_id must be provided').not().isEmpty(),
 ];
 
+const addSavedPostValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('post_id', 'Post id must be provided').not().isEmpty(),
+];
+
+
 /*
 const formDataValidator = [
     check('email', 'Email cannot be Empty').not().isEmpty(),
@@ -672,5 +680,6 @@ module.exports = {
     socialSharedMediaURLValidator,singleSocialSharedUploadValidator,
     socialAiMediaURLValidator,togglFlagValidator,postReportValidator,
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
-    deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator
+    deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
+    addSavedPostValidator	
 };
