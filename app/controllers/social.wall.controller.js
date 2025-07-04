@@ -14,6 +14,7 @@ const { addTimeToCurrentDate } = require("../utils/future.date.time");
 const { likedPost } = require("../utils/liked.post");
 const { getUserLikes } = require("./user/like/get.user.likes");
 const { getUserSavedPosts } = require("./user/saved/get.user.saved.post");
+const { getUserReportedPosts } = = require("./user/wall/get.user.reported.posts");
 
 const { SYSTEM_USER_EMAIL, SYSTEM_USER_REFERENCE_NUMBER } = require("../constants/app_constants");
 
@@ -44,8 +45,9 @@ module.exports.GetWallContent = async(req,res) => {
      }
      const postResp = await getWallRecords(post_type,page,limit);
      const likeresp = await getUserLikes(email,reference_number);
-     const savedPostResp = await getUserSavedPosts(email,reference_number);	
-     console.log('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWww ',savedPostResp);
+     const savedPostResp = await getUserSavedPosts(email,reference_number);
+     const reportedPostResp = await getUserReportedPosts(email,reference_number);	  
+     console.log('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWww ',reportedPostResp);
      const socialPosts = await likedPost(postResp[1].data,likeresp[1],savedPostResp[1]);		  
      if(postResp[0]){
         res.status(200).json({
