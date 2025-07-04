@@ -49,7 +49,7 @@ class SavedPostController {
 	 const userDetail = await getUserDetailByReferenceNumber(reference_number);  
 
 	 const response = await savePost({ user_id:userDetail._id,email,reference_number,post_id });     
-	 if(respnse[0]){
+	 if(response[0]){
             res.status(201).json({
                 success: true,
                 error: false,
@@ -103,8 +103,8 @@ class SavedPostController {
          }
 
          const response = await removeSavedPost({ email,reference_number,post_id });
-         if(respnse[0]){
-            res.status(201).json({
+         if(response[0]){
+            res.status(200).json({
                 success: true,
                 error: false,
                 data: response[1],

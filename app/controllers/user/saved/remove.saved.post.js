@@ -7,7 +7,7 @@ module.exports.removeSavedPost = async (data) => {
     const deletedRows = await SavedPosts.destroy(
       {
         where: {
-          like_id: data.post_id,
+          post_id: data.post_id,
           email: data.email,
           reference_number: data.reference_number
         },
