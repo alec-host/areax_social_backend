@@ -47,7 +47,7 @@ class SavedPostController {
             return;
          }
 	 
-	 const post_found = await savedPostExist({ reference_number,post_id });    
+	 const save_post_found = await savedPostExist({ reference_number,post_id });    
 	 if(save_post_found !== 0){
             res.status(400).json({
                 success: false,
@@ -113,7 +113,7 @@ class SavedPostController {
             return;
          }
 	    
-         const post_found = await savedPostExist({ reference_number,post_id });
+         const save_post_found = await savedPostExist({ reference_number,post_id });
          if(save_post_found !== 0){
             res.status(400).json({
                 success: false,
