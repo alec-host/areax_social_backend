@@ -6,6 +6,9 @@ const { addLike } = require("./user/like/add.like");
 const { removeLike } = require("./user/like/remove.like");
 const { likeExist } = require("./user/like/like.exist");
 const { getLikeCount } = require("./user/like/get.like.count");
+const { getUserLikes } = require("./user/like/get.user.likes");
+const { getPostCountById } = require("./user/wall/post.exist");
+const { likeIdExist } = require("./user/wall/like.exist");
 
 module.exports.AddLike = async(req,res) => {
   const errors = validationResult(req);
@@ -39,6 +42,15 @@ module.exports.AddLike = async(req,res) => {
             success: false,
             error: true,
             message: "Missing: post_id & must be cheked."
+        });
+        return;
+     }	 
+     const post_found = await getPostCountById(post_id);
+     if(post_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: `Post with id ${post_id} not found.`
         });
         return;
      }	  
@@ -115,10 +127,19 @@ module.exports.RemoveLike = async(req,res) => {
         res.status(400).json({
             success: false,
             error: true,
-            message: "Missing: like_id & must be cheked."
+            message: "Missing: like_id & must be checked."
         });
         return;        
      }
+     const likeIdExist = await likeIdExist({ reference_number,like_id });	  
+     if(!likeIdExist[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "like_id not found."
+        });
+        return;
+     }	  
      const payload = {
         email,
         reference_number,
@@ -196,6 +217,67 @@ module.exports.GetLikeCount = async(req,res) => {
             success: false,
             error: true,
             count: response[1],
+            message: response[2]
+        });
+     }
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.response?.data || e?.message || 'Something wrong has happened'
+        });
+     }
+  }
+};
+
+module.exports.GetUserLikes = async(req,res) => {
+  const errors = validationResult(req);
+  const { email, reference_number, post_id } = req.query;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+     return;
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+     if(!post_id || post_id === ':post_id'){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Missing: post_id & must be checked."
+        });
+        return;
+     }
+     const response = await getUserLikes(email,reference_number);
+     if(response[0]){
+        res.status(200).json({
+            success: true,
+            error: false,
+            like_id: response[1],
+            message: response[2]
+        });
+     }else{
+        res.status(404).json({
+            success: false,
+            error: true,
+            like_id: response[1],
             message: response[2]
         });
      }

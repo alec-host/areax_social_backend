@@ -11,116 +11,117 @@ const { removeSocialPost } = require("./user/wall/remove.social.post");
 const { saveShowOpenBidPost,saveShowClosedBidPost } = require("./user/wall/post.show.bid.content");
 const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 const { addTimeToCurrentDate } = require("../utils/future.date.time");
+const { likedPost } = require("../utils/liked.post");
+const { getUserLikes } = require("./user/like/get.user.likes");
 
 const { SYSTEM_USER_EMAIL, SYSTEM_USER_REFERENCE_NUMBER } = require("../constants/app_constants");
 
 module.exports.GetWallContent = async(req,res) => {
-    const errors = validationResult(req);
-    const { email, reference_number, post_type, page, limit } = req.query;
-    if(errors.isEmpty()){
-        try{
-            const email_found = await findUserCountByEmail(email);
-            if(email_found > 0){
-                const reference_number_found = await findUserCountByReferenceNumber(reference_number);
-                if(reference_number_found > 0){
-		    const response = await getWallRecords(page,limit,post_type);
-		    if(response[0]){
-                        res.status(200).json({
-                            success: true,
-                            error: false,
-			    data: response[1].data,	
-		            pagination: {
-			       total: Number(response[1].total),
-			       current_page: Number(response[1].currentPage),   	   
-			       total_pages: Number(response[1].totalPages)	    
-			    },		
-                            message: "List of  wall content."
-                        });
-		    }else{
-                        res.status(400).json({
-                            success: false,
-                            error: true,
-                            message: "Error getting wall content."
-                        });
-		    }
-                }else{
-                    res.status(404).json({
-                        success: false,
-                        error: true,
-                        message: "Reference number not found."
-                    });
-                }
-            }else{
-                res.status(404).json({
-                    success: false,
-                    error: true,
-                    message: "Email not found."
-                });
-            }
-        }catch(e){
-            if(e){
-		console.error(e);    
-                res.status(500).json({
-                    success: false,
-                    error: true,
-                    message: e?.response?.message || e?.message || 'Something wrong has happened'
-                });
-            }
-        }
-    }else{
-        res.status(422).json({ success: false, error: true, message: errors.array() });
-    }
+  const errors = validationResult(req);
+  const { email, reference_number, post_type, page, limit } = req.query;
+  if(!errors.isEmpty()){
+     return res.status(422).json({ success: false, error: true, message: errors.array() });	  
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });	     
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });	     
+	return;     
+     }
+     const postResp = await getWallRecords(post_type,page,limit);
+     const likeresp = await getUserLikes(email,reference_number);
+     const socialPosts = await likedPost(postResp[1].data,likeresp[1]);		  
+     if(postResp[0]){
+        res.status(200).json({
+            success: true,
+            error: false,
+	    data: socialPosts,	
+	    pagination: {
+	       total: parseInt(postResp[1].total),
+	       current_page: parseInt(postResp[1].currentPage),   	   
+	       total_pages: parseInt(postResp[1].totalPages)	    
+	    },		
+            message: "List of social wall post[s]."
+        });
+     }else{
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Error: fetching social wall post[s]."
+        });
+     }
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+  }
 };
 
 module.exports.GetWallContentByReferenceNumber = async(req,res) => {
-    const errors = validationResult(req);
-    const { email, reference_number, post_type } = req.body;
-    if(errors.isEmpty()){
-        try{
-            const email_found = await findUserCountByEmail(email);
-            if(email_found > 0){
-                const reference_number_found = await findUserCountByReferenceNumber(reference_number);
-                if(reference_number_found > 0){
-		     const response = await getWallRecordsByReferenceNumber(reference_number,post_type);	
-		     if(response[0]){	
-                        res.status(200).json({
-                            success: true,
-                            error: false,
-                            message: "List of your own wall content."
-                        });
-		     }else{
-                        res.status(400).json({
-                            success: false,
-                            error: true,
-                            message: "Error getting your own wall content."
-                        });
-		     }
-                }else{
-                    res.status(404).json({
-                        success: false,
-                        error: true,
-                        message: "Reference number not found."
-                    });
-                }
-            }else{
-                res.status(404).json({
-                    success: false,
-                    error: true,
-                    message: "Email not found."
-                });
-            }
-        }catch(e){
-            if(e){
-                res.status(500).json({
-                    success: false,
-                    error: true,
-                    message: e?.response?.message || e?.message || 'Something wrong has happened'
-                });
-            }
-        }
-    }else{
-        res.status(422).json({ success: false, error: true, message: errors.array() });
-    }
+  const errors = validationResult(req);
+  const { email, reference_number, post_type } = req.body;
+  if(!errors.isEmpty()){
+     return res.status(422).json({ success: false, error: true, message: errors.array() });	  
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;	     
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;	     
+     }
+     const response = await getWallRecordsByReferenceNumber(reference_number,post_type);	
+     if(response[0]){	
+        res.status(200).json({
+            success: true,
+            error: false,
+            message: "List of my social wall post[s]."
+        });
+     }else{
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Error: fetching my socail wall post[s]."
+        }); 
+     }
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+   }
 };
 
 module.exports.SaveShowContent = async(req,res) => {

@@ -8,6 +8,7 @@ module.exports.likeExist = async (likeData) => {
     const likeCount = await Likes.count({
       where: {
         reference_number: likeData.reference_number,
+	post_id: likeData.post_id      
       },
     });
 

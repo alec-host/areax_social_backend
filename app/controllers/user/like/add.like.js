@@ -12,8 +12,6 @@ module.exports.addLike = async (likeData) => {
       created_at:  new Date(),	    
       is_updated: 0, // Default value
     });
-
-    //console.log('Like added successfully:', newLike);
     return [true,newLike];
   } catch (error) {
     console.error('Error adding like:', error.message);

@@ -76,7 +76,7 @@ router.post('/friend/unblock',auth,inputValidator.friendOpValidator,friendContro
  *-post_type
  *
  * */
-router.get('/social-content',auth,inputValidator.getWallFeedValidator,wallController.GetWallContent);
+router.get('/social-content'/*,auth*/,inputValidator.getWallFeedValidator,wallController.GetWallContent);
 /*
  *
  *-email
@@ -173,7 +173,7 @@ router.post('/group-share-content/url',auth,inputValidator.socialSharedMediaURLV
  *-post_id
  *
  * */
-router.post('/like',basicAuth,inputValidator.addLikeCommentValidator,likeController.AddLike);
+router.post('/like',auth,inputValidator.addLikeCommentValidator,likeController.AddLike);
 /*
  *
  *-email
@@ -181,14 +181,21 @@ router.post('/like',basicAuth,inputValidator.addLikeCommentValidator,likeControl
  *-like_id
  *
  * */
-router.delete('/like/:like_id',basicAuth,inputValidator.removeLikeValidator,likeController.RemoveLike);
+router.delete('/like/:like_id',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
 /*
  *-email
  *-reference_number
  *-post_id
  *
  * */
-router.get('/like',auth,inputValidator.getLikeCommentValidator,likeController.GetLikeCount);
+router.get('/like'/*,auth*/,inputValidator.getLikeCommentValidator,likeController.GetUserLikes);
+/*
+ *-email
+ *-reference_number
+ *-post_id
+ *
+ * */
+router.get('/like/count',auth,inputValidator.getLikeCommentValidator,likeController.GetLikeCount);
 /*
  *
  *-email
