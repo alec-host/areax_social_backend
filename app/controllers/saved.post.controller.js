@@ -47,8 +47,8 @@ class SavedPostController {
             return;
          }
 	 
-	 const save_post_found = await savedPostExist({ reference_number,post_id });    
-	 if(save_post_found !== 0){
+	 const save_post_found = await savedPostExist({ reference_number,post_id });     
+	 if(save_post_found[0] && save_post_found[1] > 0){
             res.status(400).json({
                 success: false,
                 error: true,
@@ -63,8 +63,7 @@ class SavedPostController {
 	 if(response[0]){
             res.status(201).json({
                 success: true,
-                error: false,
-		data: response[1],    
+                error: false, 
                 message: "Post has been saved."
             }); 
 	 }else{
@@ -87,7 +86,8 @@ class SavedPostController {
 
    async removeSavedPost(req,res){
       const errors = validationResult(req);
-      const { email, reference_number, post_id } = req.body;
+      const { email, reference_number } = req.body;
+      const { post_id } = req.params;	   
       try{
          if(!errors.isEmpty()){
             res.status(422).json({ success: false, error: true, message: errors.array() });
@@ -114,11 +114,11 @@ class SavedPostController {
          }
 	    
          const save_post_found = await savedPostExist({ reference_number,post_id });
-         if(save_post_found !== 0){
+         if(save_post_found[0] && save_post_found[1] === 0){
             res.status(400).json({
                 success: false,
                 error: true,
-                message: `Post with post_id ${post_id} exist.`
+                message: `Post with post_id ${post_id} does not exist.`
             });
             return;
          }	      
@@ -128,7 +128,6 @@ class SavedPostController {
             res.status(200).json({
                 success: true,
                 error: false,
-                data: response[1],
                 message: "Post has been deleted."
             });
          }else{
