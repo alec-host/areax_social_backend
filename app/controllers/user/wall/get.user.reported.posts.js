@@ -7,7 +7,7 @@ module.exports.getUserReportedPosts = async (email,reference_number) => {
     const count = await ReportPosts.count({where:{email: email,reference_number: reference_number}});
     if(count > 0){
        const record = await ReportPosts.findAll({
-           attributes:['post_id','like_id','user_id','email','reference_number','vote_type'],
+           attributes:['post_id','user_id','email','reference_number','vote_type'],
            where:{
                email: email,
                reference_number: reference_number,
