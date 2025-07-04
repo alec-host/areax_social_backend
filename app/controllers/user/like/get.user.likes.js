@@ -17,9 +17,8 @@ module.exports.getUserLikes = async (email,reference_number) => {
     }else{
        return [false,[],`No Likes`];
     }
-
   } catch(error) {
     console.error('Error fetching user likes:', error);
-    return [false,error?.message];
+    return [false,[],error?.message];
   }
 };

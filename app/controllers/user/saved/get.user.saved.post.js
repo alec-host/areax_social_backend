@@ -20,6 +20,6 @@ module.exports.getUserSavedPosts = async (email,reference_number) => {
 
   } catch(error) {
     console.error('Error fetching user saved post[s]:', error);
-    return [false,error?.message];
+    return [false,[],error?.message];
   }
 };
