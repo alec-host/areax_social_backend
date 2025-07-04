@@ -1,7 +1,7 @@
 const { validationResult } = require("express-validator");
 
-//const { getPostFlaggedStatusByPostId } = require("./user/wall/flagged.post.status");
 const { saveReportedPost } = require('./user/wall/save.reported.post');
+const { getPostCountById } = require("./user/wall/post.exist");
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
@@ -41,16 +41,26 @@ class ReportPostController {
             return;
          }
 
-	 const userDetail = await getUserDetailByReferenceNumber(reference_number);
-	
+         const post_found = await getPostCountById(post_id);
+         if(post_found === 0){
+            res.status(404).json({
+                success: false,
+                error: true,
+                message: `Post with id ${post_id} not found.`
+            });
+            return;
+         }
+	      
+	 const userDetail = await getUserDetailByReferenceNumber(reference_number);	
 	 const payload = { 
-               user_id: userDetail._id,		 
-	       email,
-               reference_number,
-	       vote_type,
-	       feedback,
-	       post_id 
+            user_id: userDetail._id,		 
+	    email,
+            reference_number,
+	    vote_type,
+	    feedback,
+	    post_id 
 	 };
+
 	 const response = await saveReportedPost(payload);   
 	 if(response[0]){
             res.status(201).json({
