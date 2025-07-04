@@ -1,4 +1,4 @@
-module.exports.likedPost = async(posts,likes) => {	
+module.exports.likedPost = async(posts,likes,savedPosts) => {	
    const post_ids = posts.map(p => p.post_id);
    const likedPostIds = new Set(likes.map(l => l.post_id));
    //console.log('VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVvvvvvvvvv ',likedPostIds);	
