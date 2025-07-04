@@ -11,6 +11,7 @@ const changeProfileStatusController = require("../controllers/user.profile.contr
 const fileController = require("../controllers/file.controller");
 const flagController = require("../controllers/flag.controller");
 const reportController = require("../controllers/report.controller");
+const savedPostController = required("../controllers/saved.post.controller");
 
 const inputValidator = require("../validation/common.validation");
 
@@ -501,5 +502,21 @@ router.post('/comment/reply',auth,inputValidator.commentReplyValidator,commentCo
  *
  * */
 router.get('/comment/reply',auth,inputValidator.getCommentReplyValidator,commentController.GetCommentReplies);
+/*
+ *
+ *-email
+ *-reference_number
+ *-post_id
+ *
+ * */
+router.post('/save',auth,inputValidator.togglFlagValidator,savedPostController.addSavedPost);
+/*
+ *
+ *-email
+ *-reference_number
+ *-post_id
+ *
+ * */
+router.delete('/save/:post_id',auth,inputValidator.togglFlagValidator,savedPostController.removeSavedPost);
 
 module.exports = router;

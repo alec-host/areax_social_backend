@@ -5,8 +5,6 @@ const { removeSavedPost } = require("./user/saved/remove.saved.post");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 
-
-
 class SavedPostController {
    async addSavedPost(req,res){
       const errors = validationResult(req);	   
