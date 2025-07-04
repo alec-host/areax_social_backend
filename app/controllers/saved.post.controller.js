@@ -2,8 +2,10 @@ const { validationResult } = require("express-validator");
 
 const { savePost } = require("./user/saved/saved.post");
 const { removeSavedPost } = require("./user/saved/remove.saved.post");
+const { getPostCountById } = require("./user/wall/post.exist");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
+const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 
 class SavedPostController {
    async addSavedPost(req,res){
@@ -33,7 +35,20 @@ class SavedPostController {
             });
             return;
          }
-	 const response = await savePost({ email,reference_number,post_id });     
+
+         const post_found = await getPostCountById(post_id);
+         if(post_found === 0){
+            res.status(404).json({
+                success: false,
+                error: true,
+                message: `Post with id ${post_id} not found.`
+            });
+            return;
+         }
+
+	 const userDetail = await getUserDetailByReferenceNumber(reference_number);  
+
+	 const response = await savePost({ user_id:userDetail._id,email,reference_number,post_id });     
 	 if(respnse[0]){
             res.status(201).json({
                 success: true,
