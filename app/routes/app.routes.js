@@ -517,6 +517,6 @@ router.post('/save',auth,inputValidator.togglFlagValidator,savedPostController.a
  *-post_id
  *
  * */
-router.delete('/save/:post_id',auth,inputValidator.togglFlagValidator,savedPostController.removeSavedPost);
+router.delete('/save/:post_id',auth,inputValidator.deletePostValidator,savedPostController.removeSavedPost);
 
 module.exports = router;
