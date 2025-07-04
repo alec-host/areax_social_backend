@@ -44,7 +44,8 @@ module.exports.GetWallContent = async(req,res) => {
      }
      const postResp = await getWallRecords(post_type,page,limit);
      const likeresp = await getUserLikes(email,reference_number);
-     const savedPostResp = await getUserSavedPosts(email,reference_number);	  
+     const savedPostResp = await getUserSavedPosts(email,reference_number);	
+     console.log('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWww ',savedPostResp);
      const socialPosts = await likedPost(postResp[1].data,likeresp[1],savedPostResp[1]);		  
      if(postResp[0]){
         res.status(200).json({

@@ -15,7 +15,7 @@ module.exports.getUserLikes = async (email,reference_number) => {
        });
        return [true,record,`List of Like[s]`];
     }else{
-       return [false,count,`No Likes`];
+       return [false,[],`No Likes`];
     }
 
   } catch(error) {

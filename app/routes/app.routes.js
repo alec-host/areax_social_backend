@@ -11,7 +11,7 @@ const changeProfileStatusController = require("../controllers/user.profile.contr
 const fileController = require("../controllers/file.controller");
 const flagController = require("../controllers/flag.controller");
 const reportController = require("../controllers/report.controller");
-const savedPostController = required("../controllers/saved.post.controller");
+const savedPostController = require("../controllers/saved.post.controller");
 
 const inputValidator = require("../validation/common.validation");
 
