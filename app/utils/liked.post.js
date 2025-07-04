@@ -1,6 +1,7 @@
 module.exports.likedPost = async(posts,likes,savedPosts) => {	
    const post_ids = posts.map(p => p.post_id);
    const likedPostIds = new Set(likes.map(l => l.post_id));
+   const savedPostIds = new Set(savedPosts.map(l => l.post_id))	
    //console.log('VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVvvvvvvvvv ',likedPostIds);	
    const response = posts.map(post => ({
       post_id: post.post_id,
@@ -21,7 +22,7 @@ module.exports.likedPost = async(posts,likes,savedPosts) => {
       type: post.type,
       created_at: post.created_at,
       is_liked: likedPostIds.has(post.post_id), 
-      is_saved: post.is_saved,
+      is_saved: savedPostIds.has(post.post_id),
       is_flagged: post.is_flagged,	   
       is_buy_enabled: post.is_buy_enabled,
       is_comment_allowed: post.is_comment_allowed,
