@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 
+const { reportPostExist } = require("./user/wall/reported.post.exist");
 const { saveReportedPost } = require('./user/wall/save.reported.post');
 const { getPostCountById } = require("./user/wall/post.exist");
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
@@ -47,6 +48,17 @@ class ReportPostController {
                 success: false,
                 error: true,
                 message: `Post with id ${post_id} not found.`
+            });
+            return;
+         }
+
+	 const reported_post_found = await reportPostExist({ reference_number,post_id });     
+	      
+         if(reported_post_found[1] > 0){
+            res.status(400).json({
+                success: false,
+                error: true,
+                message: `Post with id ${post_id} has been reported by you.`
             });
             return;
          }

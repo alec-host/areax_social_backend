@@ -482,7 +482,7 @@ router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidat
  *-post_id
  *
  * */
-router.post('/report',auth,inputValidator.reportedPostValidator,reportController.reportedPost);
+router.post('/report'/*,auth*/,inputValidator.reportedPostValidator,reportController.reportedPost);
 /*
  *
  *-email
