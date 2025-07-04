@@ -585,13 +585,13 @@ const togglFlagValidator = [
     .isBoolean().withMessage('Flag must be a boolean value: true or false')
 ];
 
-const postReportValidator = [ 
+const reportedPostValidator = [ 
   body('email', 'Email cannot be Empty').not().isEmpty(),
   body('email', 'Invalid email').isEmail(),
   body('reference_number', 'Reference number must be provided').not().isEmpty(),
-  body('vote_type')
+  /*body('vote_type')
     .exists({ checkFalsy: true }).withMessage('vote_type is required')
-    .isIn(['upvote', 'downvote']).withMessage('vote_type must be either "upvote" or "downvote"'),
+    .isIn(['upvote', 'downvote']).withMessage('vote_type must be either "upvote" or "downvote"'),*/
   body('post_id')
     .exists({ checkFalsy: true }).withMessage('post_id must be provided')
     .isInt().withMessage('post_id must be an integer'),
@@ -678,7 +678,7 @@ module.exports = {
     socialWallURLValidator,deletePostValidator,removeLikeCommentValidator,
     removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator,
     socialSharedMediaURLValidator,singleSocialSharedUploadValidator,
-    socialAiMediaURLValidator,togglFlagValidator,postReportValidator,
+    socialAiMediaURLValidator,togglFlagValidator,reportedPostValidator,
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
     deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
     addSavedPostValidator	

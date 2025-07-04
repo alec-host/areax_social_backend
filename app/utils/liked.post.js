@@ -2,7 +2,7 @@ module.exports.likedPost = async(posts,likes,savedPosts,reportedPosts) => {
    const post_ids = posts.map(p => p.post_id);
    const likedPostIds = new Set(likes.map(l => l.post_id));
    const savedPostIds = new Set(savedPosts.map(l => l.post_id));
-   const reportedPostIds = new Set(reportedPosts.map(1 => 1.post_id));
+   const reportedPostIds = new Set(reportedPosts.map(l => l.post_id));
    //console.log('VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVvvvvvvvvv ',likedPostIds);	
    const response = posts.map(post => ({
       post_id: post.post_id,

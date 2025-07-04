@@ -478,12 +478,11 @@ router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidat
  *
  *-email
  *-reference_number
- *-vote type
  *-feedback
  *-post_id
  *
  * */
-router.post('/report',auth,inputValidator.postReportValidator,reportController.savePost);
+router.post('/report',auth,inputValidator.reportedPostValidator,reportController.reportedPost);
 /*
  *
  *-email

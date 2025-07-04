@@ -10,14 +10,16 @@ const { httpReportContentPost } = require('../utils/http.utils');
 
 class ReportPostController {
 
-   async savePost(req,res){
+   async reportedPost(req,res){
       const errors = validationResult(req);	   
-      const { email, reference_number, vote_type, feedback, post_id } = req.body;
+      const { email, reference_number, feedback, post_id } = req.body;
       try{
          if(!errors.isEmpty()){
             res.status(422).json({ success: false, error: true, message: errors.array() });
             return;
          }
+	     
+	 const vote_type = "downvote";   
 	      
          const email_found = await findUserCountByEmail(email);
          if(email_found === 0){
@@ -38,48 +40,30 @@ class ReportPostController {
             });
             return;
          }
+
 	 const userDetail = await getUserDetailByReferenceNumber(reference_number);
-	 /*     
-         const postStatus = await getPostFlaggedStatusByPostId(post_id);
-	 if(postStatus.is_flagged === false){  
-            const httpResponse = await httpReportContentPost({ email, reference_number, post_id, flag: true });
-            if(!httpResponse[0]){
-               res.status(400).json({
-                   success: false,
-                   error: true,
-                   message: `Error: ${httpResponse[1]}`
-               });
-               return;
-            }
-	    const payload = { 
+	
+	 const payload = { 
                user_id: userDetail._id,		 
 	       email,
                reference_number,
 	       vote_type,
 	       feedback,
 	       post_id 
-	    };
-	    const response = await saveReportedPost(payload);   
-	    if(response[0]){
-               res.status(201).json({
-                   success: true,
-                   error: false,
-		   data: response[1],   
-                   message: "Report has been saved."
-               });          
-	    }else{
-               res.status(400).json({
-                   success: false,
-                   error: true,
-                   message: response[1]
-               });
-	    } 
-	    */
+	 };
+	 const response = await saveReportedPost(payload);   
+	 if(response[0]){
+            res.status(201).json({
+                success: true,
+                error: false,
+		data: response[1],   
+                message: `Post with ${post_id} has been reported.`
+            });          
 	 }else{
             res.status(400).json({
                 success: false,
                 error: true,
-                message: 'You have already flagged this post.'
+                message: response[1]
             });
 	 }
       }catch(error){
