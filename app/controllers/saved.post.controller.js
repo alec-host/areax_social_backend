@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 
 const { savePost } = require("./user/saved/saved.post");
+const { savedPostExist } = require("./user/saved/saved.post.exist");
 const { removeSavedPost } = require("./user/saved/remove.saved.post");
 const { getPostCountById } = require("./user/wall/post.exist");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
@@ -45,6 +46,16 @@ class SavedPostController {
             });
             return;
          }
+	 
+	 const post_found = await savedPostExist({ reference_number,post_id });    
+	 if(save_post_found !== 0){
+            res.status(400).json({
+                success: false,
+                error: true,
+                message: `Post with post_id ${post_id} exist.`
+            });
+            return;
+	 }     
 
 	 const userDetail = await getUserDetailByReferenceNumber(reference_number);  
 
@@ -101,6 +112,16 @@ class SavedPostController {
             });
             return;
          }
+	    
+         const post_found = await savedPostExist({ reference_number,post_id });
+         if(save_post_found !== 0){
+            res.status(400).json({
+                success: false,
+                error: true,
+                message: `Post with post_id ${post_id} exist.`
+            });
+            return;
+         }	      
 
          const response = await removeSavedPost({ email,reference_number,post_id });
          if(response[0]){
