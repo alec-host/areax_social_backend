@@ -4,12 +4,15 @@ const { savePost } = require("./user/saved/saved.post");
 const { savedPostExist } = require("./user/saved/saved.post.exist");
 const { removeSavedPost } = require("./user/saved/remove.saved.post");
 const { getPostCountById } = require("./user/wall/post.exist");
+const { getUserSavedPosts } = require("./user/saved/get.user.saved.post");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
+const { connectToRedis, closeRedisConnection, invalidateUserCache, invalidatePostCache } = require("../cache/redis");
 
 class SavedPostController {
    async addSavedPost(req,res){
+      let redisClient = null;	   
       const errors = validationResult(req);	   
       const { email, reference_number, post_id } = req.body;
       try{	   
@@ -61,6 +64,8 @@ class SavedPostController {
 
 	 const response = await savePost({ user_id:userDetail._id,email,reference_number,post_id });     
 	 if(response[0]){
+            redisClient = await connectToRedis();
+            await invalidateUserCache(redisClient,email,reference_number);		 
             res.status(201).json({
                 success: true,
                 error: false, 
@@ -81,10 +86,15 @@ class SavedPostController {
               message: e?.response?.message || e?.message || 'Something wrong has happened'
            });
         }
+      }finally{
+         if(redisClient){
+            await closeRedisConnection(redisClient);
+         }
       }	   
    }
 
    async removeSavedPost(req,res){
+      let redisClient = null;	   
       const errors = validationResult(req);
       const { email, reference_number } = req.body;
       const { post_id } = req.params;	   
@@ -125,6 +135,8 @@ class SavedPostController {
 
          const response = await removeSavedPost({ email,reference_number,post_id });
          if(response[0]){
+            redisClient = await connectToRedis();
+            await invalidateUserCache(redisClient,email,reference_number);		 
             res.status(200).json({
                 success: true,
                 error: false,
@@ -137,6 +149,65 @@ class SavedPostController {
                 message: "Failed to delete the post."
             });
          }	      
+      }catch(e){
+        if(e){
+           res.status(500).json({
+              success: false,
+              error: true,
+              message: e?.response?.message || e?.message || 'Something wrong has happened'
+           });
+        }
+      }finally{
+         if(redisClient){
+            await closeRedisConnection(redisClient);
+         }
+      }
+   }
+
+   async getSavedPost(req,res){
+      const errors = validationResult(req);
+      const { email, reference_number } = req.body;
+      try{
+         if(!errors.isEmpty()){
+            res.status(422).json({ success: false, error: true, message: errors.array() });
+            return;
+         }
+         const email_found = await findUserCountByEmail(email);
+         if(email_found === 0){
+            res.status(404).json({
+                success: false,
+                error: true,
+                message: "Email not found."
+            });
+            return;
+         }
+
+         const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+         if(reference_number_found === 0){
+            res.status(404).json({
+                success: false,
+                error: true,
+                message: "Reference number not found."
+            });
+            return;
+         }
+
+         const respSavedPost = await getUserSavedPosts(email,reference_number);
+         if(respSavedPost[0]){
+	    const savedPostIdsCSV = respSavedPost[1].map(item => item.post_id).join(',');	 
+            res.status(200).json({
+                success: true,
+                error: false,
+		saved_post_ids: savedPostIdsCSV,
+                message: respSavedPost[2]
+            });
+         }else{
+            res.status(404).json({
+                success: false,
+                error: true,
+                message: respSavedPost[2]
+            });
+         }
       }catch(e){
         if(e){
            res.status(500).json({

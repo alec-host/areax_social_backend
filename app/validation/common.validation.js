@@ -41,9 +41,9 @@ const singleSocialWallUploadValidator = [
         .withMessage('Missing: is_public must be checked')
         .bail()
         .isIn(['everyone', 'friends', 'private'])
-        .withMessage('is_public must be either "everyone", "friends", "private"'),	
+        .withMessage('is_public must be either "everyone", "friends", "private"'),
     body('type')
-	.optional({ checkFalsy: true }) // allow missing or empty fields
+        .optional({ checkFalsy: true }) // allow missing or empty fields
         .customSanitizer(value => {
             return value ? value : 'other'; // default to 'other' if not provided
         })
@@ -53,16 +53,16 @@ const singleSocialWallUploadValidator = [
                throw new Error('Invalid type: must be "image", "video", or empty (defaults to "other")');
             }
             return true;
-        }),	
+        }),
     body('is_buy_enabled')
-	.isInt({ min: 0, max: 1 })
+        .isInt({ min: 0, max: 1 })
         .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
     body('is_comment_allowed')
-	.isInt({ min: 0, max: 1 })
+        .isInt({ min: 0, max: 1 })
         .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
     body('is_minted_automatically')
         .isInt({ min: 0, max: 1 })
-        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -81,7 +81,7 @@ const singleSocialWallUploadValidator = [
 const singleSocialUploadValidator = [
     body('email', 'Missing: email must be checked').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
-    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),	
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
     body('caption')
         .optional()
         .isLength({ max: 5250 })
@@ -89,13 +89,13 @@ const singleSocialUploadValidator = [
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
-        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),	
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
     body('is_public')
         .exists({ checkFalsy: true })
         .withMessage('Missing: is_public must be checked')
         .bail()
         .isIn(['everyone', 'friends', 'private'])
-        .withMessage('is_public must be either "everyone", "friends", "private"'),	
+        .withMessage('is_public must be either "everyone", "friends", "private"'),
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -148,7 +148,7 @@ const singleGroupChatUploadValidator = [
     body('email', 'Missing: email must be checked').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
-    body('group_id', 'Missing: group_id must be checked').not().isEmpty(),	
+    body('group_id', 'Missing: group_id must be checked').not().isEmpty(),
     body('message')
         .optional()
         .isLength({ max: 5250 })
@@ -190,7 +190,7 @@ const socialWallURLValidator = [
         .withMessage('Missing: is_public must be checked')
         .bail()
         .isIn(['everyone', 'friends', 'private'])
-        .withMessage('is_public must be either "everyone", "friends", "private"'),	
+        .withMessage('is_public must be either "everyone", "friends", "private"'),
     body('is_buy_enabled')
         .isInt({ min: 0, max: 1 })
         .withMessage('is_buy_enabled must be checked, has a value of 0 or 1.'),
@@ -199,7 +199,7 @@ const socialWallURLValidator = [
         .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
     body('is_minted_automatically')
         .isInt({ min: 0, max: 1 })
-        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),
 ];
 
 const singleGroupMgmtUploadValidator = [
@@ -210,7 +210,43 @@ const singleGroupMgmtUploadValidator = [
     body('group_caption')
         .optional()
         .isLength({ max: 5250 })
-        .withMessage('Missing: group_caption must not exceed 250 characters.'),
+        .withMessage('Missing: group_caption must not exceed 5250 characters.'),
+    body('max_members')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('max_members must be checked, has a value of between 1 to 1000.'),
+    (req, res, next) => {
+        if(!req.file){
+            //throw new Error('No file uploaded');
+            return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+        }
+        const validFormats = ['.mp4','.jpeg','.jpg','.png','.webp'];
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        if(!validFormats.includes(ext)){
+            //throw new Error('Invalid file format. Only .jpeg,.webp are allowed.');
+            return res.status(400).json({ success: false, error: true, message: 'Invalid file format. Only MP4,JPEG,JPG,PNG,and WEBP are allowed.' });
+        }
+        next();
+    }
+];
+
+const singlePaidGroupMgmtUploadValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('group_name', 'Missing: group_name must be checked').not().isEmpty(),
+    body('group_caption')
+        .optional()
+        .isLength({ max: 5250 })
+        .withMessage('Missing: group_caption must not exceed 5250 characters.'),
+    body('price_amount')
+        .isDecimal({ decimal_digits: '0,2' })
+        .withMessage('Price amount must be a decimal number with up to 2 decimal places'),
+    body('subscription_interval')
+       .isIn(['monthly', 'yearly', 'weekly'])
+       .withMessage('Subscription interval must be one of: monthly, yearly, weekly'),
+    body('max_members')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('max_members must be checked, has a value of between 1 to 1000.'),
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -238,9 +274,9 @@ const singleShowUploadValidator = [
         .optional()
         .isLength({ max: 5250 })
         .withMessage('Caption must not exceed 250 characters.'),
-    body('location_name', 'Missing: location_name must be checked').not().isEmpty(),	
+    body('location_name', 'Missing: location_name must be checked').not().isEmpty(),
     body('type')
-        .optional({ checkFalsy: true }) 
+        .optional({ checkFalsy: true })
         .customSanitizer(value => {
             return value ? value : 'other';
         })
@@ -250,15 +286,15 @@ const singleShowUploadValidator = [
                throw new Error('Invalid type: must be "image", "video", or empty (defaults to "other")');
             }
             return true;
-        }),	
+        }),
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
-        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),	
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
     body('share_on_social_wall')
         .optional()
         .isInt({ min: 0, max: 1 })
-        .withMessage('share_on_social_wall must be checked, has a value of 0 or 1.'),	
+        .withMessage('share_on_social_wall must be checked, has a value of 0 or 1.'),
     body('close_time')
         .optional()
         .matches(/^(1?[1-9]|2[0-4])\s?hours$|^(1?[1-9]|[1-2][0-9]|30)\s?days$|^(1?[1-9]|1[0-2])\s?months$/)
@@ -271,7 +307,7 @@ const singleShowUploadValidator = [
         .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
     body('is_minted_automatically')
         .isInt({ min: 0, max: 1 })
-        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
@@ -297,13 +333,13 @@ const getFriendDetailsValidator = [
     query('email', 'Email cannot be Empty').not().isEmpty(),
     query('email', 'Invalid email').isEmail(),
     query('reference_number', 'Reference number must be provided').not().isEmpty(),
-    query('friend_category', 'Friend category must be provided').not().isEmpty(),	
+    query('friend_category', 'Friend category must be provided').not().isEmpty(),
 ];
 
 const friendOpValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    body('friend_reference_number', 'Friend reference number must be provided').not().isEmpty(),	
+    body('friend_reference_number', 'Friend reference number must be provided').not().isEmpty(),
 ];
 
 const acceptFriendValidator = [
@@ -317,8 +353,8 @@ const getWallFeedValidator = [
     query('email', 'Invalid email').isEmail(),
     query('reference_number', 'Reference number must be provided').not().isEmpty(),
     query('post_type', 'Post type must be provided').not().isEmpty(),
-    query('page', 'Page number must be provided').not().isEmpty().isInt({ gt: 0 }).withMessage('Page must be a number greater than 0'),	
-    query('limit', 'Limit must be provided').not().isEmpty().isInt({ gt: 0, lt: 101 }).withMessage('Limit must be a number between 1 and 100'),	
+    query('page', 'Page number must be provided').not().isEmpty().isInt({ gt: 0 }).withMessage('Page must be a number greater than 0'),
+    query('limit', 'Limit must be provided').not().isEmpty().isInt({ gt: 0, lt: 101 }).withMessage('Limit must be a number between 1 and 100'),
 ];
 
 const socialMediaURLValidator = [
@@ -333,7 +369,7 @@ const socialMediaURLValidator = [
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
-        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),	
+        .withMessage('Invalid GPS coordinates format. Must be in "latitude,longitude", format'),
 ];
 
 const socialAiMediaURLValidator = [
@@ -341,7 +377,7 @@ const socialAiMediaURLValidator = [
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     body('media_url','Media url must be provided').not().isEmpty(),
-    body('category','Category must be provided').not().isEmpty(),	
+    body('category','Category must be provided').not().isEmpty(),
     body('caption')
         .optional() // Makes caption optional
         .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
@@ -370,7 +406,7 @@ const socialSharedMediaURLValidator = [
         .withMessage('Missing: is_public must be checked')
         .bail()
         .isIn(['everyone', 'friends', 'private'])
-        .withMessage('is_public must be either "everyone", "friends", "private"'),	
+        .withMessage('is_public must be either "everyone", "friends", "private"'),
 ];
 
 const socialAIMediaURLValidator = [
@@ -378,7 +414,7 @@ const socialAIMediaURLValidator = [
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     body('media_url','Media url must be provided').not().isEmpty(),
-    body('category','Category must be provided').not().isEmpty(),	
+    body('category','Category must be provided').not().isEmpty(),
     body('caption')
         .optional() // Makes caption optional
         .isLength({ max: 5250 }) // Validates that length does not exceed 250 characters
@@ -393,7 +429,7 @@ const groupChatMediaURLValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    body('group_id', 'group_id must be provided').not().isEmpty(),	
+    body('group_id', 'group_id must be provided').not().isEmpty(),
     body('media_url','Media url must be provided').not().isEmpty(),
     body('message')
         .optional() // Makes caption optional
@@ -417,7 +453,7 @@ const showMediaURLValidator = [
     body('item_amount')
         .optional() // Makes item_amount optional
         .isFloat({ gt: 0 }) // Validates that, if provided, it must be a number greater than 0
-        .withMessage('item_amount must be greater than 0 if provided.'),	
+        .withMessage('item_amount must be greater than 0 if provided.'),
     body('gps_coordinates')
         .optional()
         .matches(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/)
@@ -428,7 +464,7 @@ const showMediaURLValidator = [
         .withMessage('share_on_social_wall must be checked, has a value of 0 or 1.'),
     body('close_time')
         .optional()
-	.matches(/^(1?[1-9]|2[0-4])\s?hours$|^(1?[1-9]|[1-2][0-9]|30)\s?days$|^(1?[1-9]|1[0-2])\s?months$/)
+        .matches(/^(1?[1-9]|2[0-4])\s?hours$|^(1?[1-9]|[1-2][0-9]|30)\s?days$|^(1?[1-9]|1[0-2])\s?months$/)
         .withMessage('close_time must be defined as "1-24 hours", "1-30 days", or "1-12 months'),
     body('is_buy_enabled')
         .isInt({ min: 0, max: 1 })
@@ -438,7 +474,7 @@ const showMediaURLValidator = [
         .withMessage('is_comment_allowed must be checked, has a value of 0 or 1.'),
     body('is_minted_automatically')
         .isInt({ min: 0, max: 1 })
-        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),	
+        .withMessage('is_minted_automatically must be checked, has a value of 0 or 1.'),
 ];
 
 const deletePostValidator = [
@@ -452,7 +488,7 @@ const addLikeCommentValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    body('post_id', 'Post id must be provided').not().isEmpty(),	
+    body('post_id', 'Post id must be provided').not().isEmpty(),
 ];
 
 const removeLikeCommentValidator = [
@@ -467,16 +503,16 @@ const addCommentValidator = [
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     body('post_id', 'Post id must be provided').not().isEmpty(),
-    body('comment', 'Comment id must be provided').not().isEmpty(),	
+    body('comment', 'Comment id must be provided').not().isEmpty(),
 ];
 
 const removeLikeValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
-    param('like_id')	
-	.exists({ checkNull: true, checkFalsy: true })
-	.withMessage('Like id must be provided and not be empty')
+    param('post_id')
+        .exists({ checkNull: true, checkFalsy: true })
+        .withMessage('Post id must be provided and not be empty')
 ];
 
 const editCommentValidator = [
@@ -484,7 +520,7 @@ const editCommentValidator = [
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     body('comment_id', 'Comment id must be provided').not().isEmpty(),
-    body('comment', 'Comment must be provided').not().isEmpty(),	
+    body('comment', 'Comment must be provided').not().isEmpty(),
 ];
 
 const removeCommentValidator = [
@@ -492,8 +528,8 @@ const removeCommentValidator = [
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     param('comment_id')
-	.exists({ checkNull: true, checkFalsy: true })	
-	.withMessage('Comment id must be provided and not be empty')
+        .exists({ checkNull: true, checkFalsy: true })
+        .withMessage('Comment id must be provided and not be empty')
 ];
 
 const editItemValidator = [
@@ -502,8 +538,8 @@ const editItemValidator = [
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     body('post_id', 'Comment id must be provided').not().isEmpty(),
     body('item_amount', 'Amount must be provided').not().isEmpty(),
-    body('caption', 'Caption must be provided').not().isEmpty(),	
-    body('share_on_social_wall','share_on_social_wall must be checked').not().isEmpty(),	
+    body('caption', 'Caption must be provided').not().isEmpty(),
+    body('share_on_social_wall','share_on_social_wall must be checked').not().isEmpty(),
 ];
 
 const getLikeCommentValidator = [
@@ -530,7 +566,7 @@ const deleteUserFromGroupValidator = [
 const getGroupChatsValidator = [
     query('email', 'Email cannot be Empty').not().isEmpty(),
     query('email', 'Invalid email').isEmail(),
-    query('reference_number', 'Reference number must be provided').not().isEmpty(),	
+    query('reference_number', 'Reference number must be provided').not().isEmpty(),
     query('group_id', 'group_id must be provided').not().isEmpty(),
 ];
 
@@ -544,7 +580,7 @@ const editGroupMessageValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('message_id', 'message_id must be provided').not().isEmpty(),
-    body('message', 'message must be provided').not().isEmpty(),	
+    body('message', 'message must be provided').not().isEmpty(),
 ];
 
 const removeGroupMessageValidator = [
@@ -571,7 +607,7 @@ const togglFlagValidator = [
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),
     param('post_id', 'Post id must be provided').not().isEmpty(),
-    body('flag')	
+    body('flag')
     .exists().withMessage('Flag must be provided')
     .bail()
     .customSanitizer(value => {
@@ -585,7 +621,7 @@ const togglFlagValidator = [
     .isBoolean().withMessage('Flag must be a boolean value: true or false')
 ];
 
-const reportedPostValidator = [ 
+const reportedPostValidator = [
   body('email', 'Email cannot be Empty').not().isEmpty(),
   body('email', 'Invalid email').isEmail(),
   body('reference_number', 'Reference number must be provided').not().isEmpty(),
@@ -638,7 +674,7 @@ const commentReplyValidator = [
    body('reference_number', 'Reference number must be provided').not().isEmpty(),
    body('reply', 'reply must be provided').not().isEmpty(),
    body('post_id', 'post id must be provided').not().isEmpty(),
-   body('comment_id', 'comment id must be provided').not().isEmpty(),	
+   body('comment_id', 'comment id must be provided').not().isEmpty(),
 ];
 
 const getCommentReplyValidator = [
@@ -655,6 +691,11 @@ const addSavedPostValidator = [
     body('post_id', 'Post id must be provided').not().isEmpty(),
 ];
 
+const getSavedPostValidator = [
+   query('email', 'Email cannot be Empty').not().isEmpty(),
+   query('email', 'Invalid email').isEmail(),
+   query('reference_number', 'Reference number must be provided').not().isEmpty(),
+];
 
 /*
 const formDataValidator = [
@@ -664,7 +705,7 @@ const formDataValidator = [
 ];
 */
 
-module.exports = { 
+module.exports = {
     multiUploadValidator,singleSocialUploadValidator,getUserDetailsValidator,
     friendOpValidator,getWallFeedValidator,socialMediaURLValidator,
     addLikeCommentValidator,removeLikeValidator,removeCommentValidator,
@@ -673,7 +714,7 @@ module.exports = {
     singleGroupChatUploadValidator,groupChatMediaURLValidator,
     userGroupMgmtValidator,editGroupMessageValidator,removeGroupMessageValidator,
     singleGroupMgmtUploadValidator,socialAIMediaURLValidator,
-    getFriendDetailsValidator,changePrivacyStatusValidator,	
+    getFriendDetailsValidator,changePrivacyStatusValidator,
     targetProfileValidator,acceptFriendValidator,singleSocialWallUploadValidator,
     socialWallURLValidator,deletePostValidator,removeLikeCommentValidator,
     removeGroupValidator,deleteUserFromGroupValidator,getGroupChatsValidator,
@@ -681,5 +722,5 @@ module.exports = {
     socialAiMediaURLValidator,togglFlagValidator,reportedPostValidator,
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
     deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
-    addSavedPostValidator	
+    addSavedPostValidator,getSavedPostValidator,singlePaidGroupMgmtUploadValidator
 };

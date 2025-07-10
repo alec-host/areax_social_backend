@@ -7,7 +7,7 @@ module.exports.getUserSavedPosts = async (email,reference_number) => {
     const count = await SavedPosts.count({where:{email: email,reference_number: reference_number}});
     if(count > 0){
        const record = await SavedPosts.findAll({
-           attributes:['post_id','like_id','user_id','email','reference_number'],
+           attributes:['post_id','user_id','email','reference_number'],
            where:{
                email: email,
                reference_number: reference_number,

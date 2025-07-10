@@ -5,14 +5,17 @@ const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 const { addComment } = require("./user/comment/add.comment");
 const { editComment } = require("./user/comment/edit.comment");
 const { removeComment } = require("./user/comment/remove.comment");
+const { getPostByCommentId } = require("./user/comment/get.post.by.comment.id");
 const { getCommentsByPostId } = require("./user/comment/get.comment");
 const { getCommentCount } = require("./user/comment/get.comment.count");
 const { addCommentReply } = require("./user/comment/add.comment.reply");
 const { getCommentRepliesByCommentId } = require("./user/comment/get.comment.reply");
 const { getPostCountById } = require("./user/wall/post.exist");
 const { getCommentCountById } = require("./user/comment/comment.exist");
+const { connectToRedis, closeRedisConnection, invalidateUserCache, invalidatePostCache } = require("../cache/redis");
 
 module.exports.AddComment = async(req,res) => {
+    let redisClient = null;	
     const errors = validationResult(req);
     const { email, reference_number, post_id, comment } = req.body;
     if(!errors.isEmpty()){
@@ -57,7 +60,10 @@ module.exports.AddComment = async(req,res) => {
           comment_text: comment,
        };		
        const response = await addComment(payload);
-       if(response[0]){	
+       if(response[0]){
+          redisClient = await connectToRedis();
+          await invalidatePostCache(redisClient,post_id);
+          await invalidateUserCache(redisClient,email,reference_number);	       
           res.status(201).json({
               success: true,
               error: false,
@@ -78,6 +84,10 @@ module.exports.AddComment = async(req,res) => {
               error: true,
               message: e?.response?.message || e?.message || 'Something wrong has happened'
           });
+       }
+    }finally{
+       if(redisClient){
+          await closeRedisConnection(redisClient);
        }
     }
 };
@@ -163,6 +173,7 @@ module.exports.AddCommentReply = async(req,res) => {
 };
 
 module.exports.EditComment = async(req,res) => {
+    let redisClient = null;
     const errors = validationResult(req);
     const { email, reference_number, comment_id, comment } = req.body;
     if(!errors.isEmpty()){
@@ -204,6 +215,18 @@ module.exports.EditComment = async(req,res) => {
        }; 	
        const response = await editComment(payload);
        if(response[0]){
+          const respCommentId = await getPostByCommentId(email,reference_number,comment_id);
+	  if(!respCommentId[0]){
+             res.status(404).json({
+                 success: false,
+                 error: true,
+                 message: `Comment with id ${respCommentId[1]} not found.`
+             });
+             return;
+	  }     
+          redisClient = await connectToRedis();
+          await invalidatePostCache(redisClient,respCommentId[1]);
+          await invalidateUserCache(redisClient,email,reference_number);	       
           res.status(200).json({
               success: true,
               error: false,
@@ -224,10 +247,15 @@ module.exports.EditComment = async(req,res) => {
               message: e?.response?.message || e?.message || 'Something wrong has happened'
           });
        }
+    }finally{
+       if(redisClient){
+          await closeRedisConnection(redisClient);
+       }
     }
 };
 
 module.exports.RemoveComment = async(req,res) => {
+    let redisClient = null;	
     const errors = validationResult(req);
     const { email, reference_number } = req.body;
     const { comment_id } = req.params;	
@@ -263,7 +291,10 @@ module.exports.RemoveComment = async(req,res) => {
           return;
        }	    
        const response = await removeComment(comment_id);		
-       if(response[0]){	
+       if(response[0]){
+          redisClient = await connectToRedis();
+          await invalidatePostCache(redisClient,post_id);
+          await invalidateUserCache(redisClient,email,reference_number);	       
           res.status(200).json({
               success: true,
               error: false,
@@ -283,6 +314,10 @@ module.exports.RemoveComment = async(req,res) => {
               error: true,
               message: e?.response?.message || e?.message || 'Something wrong has happened'
           });
+       }
+    }finally{
+       if(redisClient){
+          await closeRedisConnection(redisClient);
        }
     }
 };

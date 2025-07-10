@@ -11,6 +11,10 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    group_reference_number: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false
@@ -18,7 +22,7 @@ module.exports = (sequelize, Sequelize) => {
     reference_number: {
       type: DataTypes.STRING(65),
       allowNull: false
-    },	  
+    },
     role: {
       type: DataTypes.ENUM('admin', 'member'),
       defaultValue: 'member'
@@ -36,6 +40,11 @@ module.exports = (sequelize, Sequelize) => {
         {
             name: 'reference_number_index',
             fields: ['reference_number'],
+            using: 'BTREE',
+        },
+        {
+            name: 'group_reference_number_index',
+            fields: ['group_reference_number'],
             using: 'BTREE',
         },
         {
@@ -58,7 +67,7 @@ module.exports = (sequelize, Sequelize) => {
   AreaXGroupMembers.associate = (models) => {
      AreaXGroupMembers.belongsTo(models.AreaXChatGroups, { foreignKey: 'group_id', onDelete: 'CASCADE' });
      AreaXGroupMembers.belongsTo(models.User, { foreignKey: 'user_id', onDelete: 'CASCADE' });
-  };	
+  };
 
   return AreaXGroupMembers;
 };

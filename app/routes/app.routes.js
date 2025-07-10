@@ -102,7 +102,7 @@ router.post('/social-content',auth,fileHandler.uploadMiddleware,inputValidator.s
  *-type
  *-is_buy_enabled
  *-is_comment_allowed
- *-is_minted_automatically 
+ *-is_minted_automatically
  *
  * */
 router.post('/social-content/url',auth,inputValidator.socialWallURLValidator,wallController.SaveSocialContent);
@@ -182,7 +182,7 @@ router.post('/like',auth,inputValidator.addLikeCommentValidator,likeController.A
  *-like_id
  *
  * */
-router.delete('/like/:like_id',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
+router.delete('/like/:post_id',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
 /*
  *-email
  *-reference_number
@@ -325,10 +325,49 @@ router.delete('/buy-content/:post_id',auth,inputValidator.deletePostValidator,bu
  *-reference_number
  *-group_name
  *-group_caption
+ *-max_members
  *-file
  *
 */
-router.post('/group',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateGroup);
+router.post('/group/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_name
+ *-group_caption
+ *-price_amount
+ *-subscription_interval
+ *-max_members
+ *-file
+ *
+*/
+router.post('/group/paid',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-invite_link
+ *
+*/
+router.post('/group/join',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.JoinGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_id
+ *-friend_reference_number
+ *
+*/
+router.post('/group/remove-user',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.RemoveUserFromGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_id
+ *
+*/
+router.post('/group/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
 /*
  *
  *-email
@@ -351,20 +390,11 @@ router.post('/group/user',auth,inputValidator.userGroupMgmtValidator,groupChatCo
  *-email
  *-reference_number
  *-group_id
- *-friend_reference_number
- *
-*/
-router.delete('/group/user/:group_id/:friend_reference_number',auth,inputValidator.deleteUserFromGroupValidator,groupChatController.RemoveUserFromGroup);
-/*
- *
- *-email
- *-reference_number
- *-group_id
  *-message
  *-file
  *
 */
-router.post('/group/message',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupChatUploadValidator,groupChatController.SendGroupChatMessage);
+//router.post('/group/message',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupChatUploadValidator,groupChatController.SendGroupChatMessage);
 /*
  *
  *-email
@@ -374,32 +404,7 @@ router.post('/group/message',auth,fileHandler.uploadMiddleware,inputValidator.si
  *-media_url
  *
 */
-router.post('/group/message/url',auth,inputValidator.groupChatMediaURLValidator,groupChatController.SendGroupChatMessage);
-/*
- *
- *-email
- *-reference_number
- *-message_id
- *-message
- *
-*/
-router.patch('/group/message',auth,inputValidator.editGroupMessageValidator,groupChatController.EditGroupChatMessage);
-/*
- *
- *-email
- *-reference_number
- *-message_id
- *
-*/
-router.delete('/group/message/:message_id',auth,inputValidator.removeGroupMessageValidator,groupChatController.DeleteGroupChatMessage);
-/*
- *
- *-email
- *-reference_number
- *-group_id
- *
-*/
-router.get('/group/message',auth,inputValidator.getGroupChatsValidator,groupChatController.GetGroupChatMessages);
+//router.post('/group/message/url',auth,inputValidator.groupChatMediaURLValidator,groupChatController.SendGroupChatMessage);
 /*
  *
  *-email
@@ -517,5 +522,12 @@ router.post('/save',/*auth,*/inputValidator.addSavedPostValidator,savedPostContr
  *
  * */
 router.delete('/save/:post_id',/*auth,*/inputValidator.deletePostValidator,savedPostController.removeSavedPost);
+/*
+ *
+ *-email
+ *-reference_number
+ *
+ * */
+router.get('/save',/*auth,*/inputValidator.getSavedPostValidator,savedPostController.getSavedPost);
 
 module.exports = router;

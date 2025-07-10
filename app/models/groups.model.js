@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = (sequelize, Sequelize) => {
   const AreaXGroupChats = sequelize.define('AreaXGroupChats', {
@@ -7,6 +8,12 @@ module.exports = (sequelize, Sequelize) => {
       autoIncrement: true,
       primaryKey: true
     },
+    group_reference_number: {
+      type: DataTypes.STRING,
+      defaultValue: () => `GRP_${uuidv4()}`,
+      unique: true,
+      allowNull: false
+    },	  
     admin_id: {
       type: DataTypes.INTEGER,
       allowNull: false // Creator is the admin by default
@@ -32,6 +39,46 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: true,
       unique: true
     },
+    // New payment-related fields
+    group_type: {
+      type: DataTypes.ENUM('open', 'exclusive'),
+      defaultValue: 'open',
+      allowNull: false
+    },
+    payment_required: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false
+    },
+    payment_type: {
+      type: DataTypes.ENUM('subscription', 'ticket', 'one_time'),
+      allowNull: true
+    },
+    price_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true
+    },
+    price_currency: {
+      type: DataTypes.STRING(3),
+      defaultValue: 'USD',
+      allowNull: true
+    },
+    stripe_product_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    stripe_price_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },	  
+    subscription_interval: {
+      type: DataTypes.ENUM('monthly', 'yearly', 'weekly'),
+      allowNull: true
+    },
+    max_members: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },	  
     created_at: {
       type: DataTypes.DATE,
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
@@ -43,6 +90,11 @@ module.exports = (sequelize, Sequelize) => {
   },{
     indexes: [
         {
+            name: 'group_reference_number_index',
+            fields: ['group_reference_number'],
+            using: 'BTREE',
+        },	    
+        {
             name: 'admin_reference_number_index',
             fields: ['admin_reference_number'],
             using: 'BTREE',
@@ -52,6 +104,16 @@ module.exports = (sequelize, Sequelize) => {
             fields: ['is_deleted'],
             using: 'BTREE',
         },
+        {
+            name: 'group_type_index',
+            fields: ['group_type'],
+            using: 'BTREE',
+        },
+        {
+            name: 'payment_required_index',
+            fields: ['payment_required'],
+            using: 'BTREE',
+        }	    
     ],
     tableName: 'tbl_areax_group_chats',
     timestamps: false,

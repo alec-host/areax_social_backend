@@ -8,10 +8,12 @@ const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 
 const { httpReportContentPost } = require('../utils/http.utils');
+const { connectToRedis, closeRedisConnection, invalidateUserCache, invalidatePostCache } = require("../cache/redis");
 
 class ReportPostController {
 
    async reportedPost(req,res){
+      let redisClient = null;	   
       const errors = validationResult(req);	   
       const { email, reference_number, feedback, post_id } = req.body;
       try{
@@ -75,6 +77,9 @@ class ReportPostController {
 
 	 const response = await saveReportedPost(payload);   
 	 if(response[0]){
+            redisClient = await connectToRedis();
+            await invalidatePostCache(redisClient,post_id);
+            await invalidateUserCache(redisClient,email,reference_number);		 
             res.status(201).json({
                 success: true,
                 error: false,
@@ -95,6 +100,10 @@ class ReportPostController {
              error: true,
              message: `Error: ${error_message}`
          });
+      }finally{
+         if(redisClient){
+            await closeRedisConnection(redisClient);
+         }
       }  	   
    }
 	

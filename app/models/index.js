@@ -32,6 +32,8 @@ db2.materialized = require("./materialized.model")(sequelize2,Sequelize);
 db2.groups = require("./groups.model")(sequelize2,Sequelize);
 db2.members = require("./group.members.model")(sequelize2,Sequelize);
 db2.messages = require("./group.messages.model")(sequelize2,Sequelize);
+db2.groups.payments = require("./group.payments")(sequelize2,Sequelize);
+db2.groups.subscriptions = require("./group.subscriptions")(sequelize2,Sequelize);
 
 db2.files = require("./file.model.js")(sequelize2,Sequelize);
 db2.queued_friends_requests = require("./request.friend.model")(sequelize2,Sequelize);

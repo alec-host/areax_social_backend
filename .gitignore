@@ -35,7 +35,7 @@ logs/
 
 # Temporary files
 tmp/
-cache/
+jumcache/
 
 # macOS system file
 .DS_Store

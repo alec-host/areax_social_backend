@@ -2,10 +2,10 @@ const { db2 } = require("../../../models");
 
 const GroupMembers = db2.members;
 
-module.exports.removeUserFromGroup = async(group_id, user_id) => {
+module.exports.removeUserFromGroup = async(group_id,reference_number) => {
   try {
     await GroupMembers.destroy({
-      where: { group_id, user_id },
+      where: { group_id, reference_number },
     });
 
     return [true, 'User removed from group'];
