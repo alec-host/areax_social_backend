@@ -45,7 +45,11 @@ module.exports = (sequelize, Sequelize)=> {
 	{
             name: 'is_updated_index',
 	    fields: ['is_updated']	
-	}    
+	},
+        {
+            name: 'post_id_index',
+            fields: ['post_id']
+        }	    
     ],
     tableName: 'tbl_areax_likes',
     timestamps: false,

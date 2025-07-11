@@ -553,14 +553,14 @@ const userGroupMgmtValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('group_id', 'group_id must be provided').not().isEmpty(),
-    body('friend_reference_number', 'friend_reference_number must be provided').not().isEmpty(),
+    body('member_reference_number', 'member_reference_number must be provided').not().isEmpty(),
 ];
 
 const deleteUserFromGroupValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     param('group_id', 'group_id must be provided').not().isEmpty(),
-    param('friend_reference_number', 'friend_reference_number must be provided').not().isEmpty(),
+    param('member_reference_number', 'member_reference_number must be provided').not().isEmpty(),
 ];
 
 const getGroupChatsValidator = [
@@ -573,7 +573,20 @@ const getGroupChatsValidator = [
 const removeGroupValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),	
     param('group_id', 'group_id must be provided').not().isEmpty(),
+];
+
+const getGroupsValidator = [
+    query('email', 'Email cannot be Empty').not().isEmpty(),
+    query('email', 'Invalid email').isEmail(),
+    query('reference_number', 'Reference number must be provided').not().isEmpty(),
+    query('page')
+      .exists({ checkFalsy: true }).withMessage('page must be provided')
+      .isInt({ min: 1 }).withMessage('page must be an integer >= 1'),
+    query('limit')
+      .exists({ checkFalsy: true }).withMessage('limit must be provided')
+      .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),	
 ];
 
 const editGroupMessageValidator = [
@@ -722,5 +735,6 @@ module.exports = {
     socialAiMediaURLValidator,togglFlagValidator,reportedPostValidator,
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
     deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
-    addSavedPostValidator,getSavedPostValidator,singlePaidGroupMgmtUploadValidator
+    addSavedPostValidator,getSavedPostValidator,singlePaidGroupMgmtUploadValidator,
+    getGroupsValidator	
 };

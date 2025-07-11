@@ -136,7 +136,7 @@ module.exports.RemoveLike = async(req,res) => {
      }
 
      const userDetail = await getUserDetailByReferenceNumber(reference_number);
-     if(!post_id || like_id === ':post_id'){
+     if(!post_id || post_id === ':post_id'){
         res.status(400).json({
             success: false,
             error: true,

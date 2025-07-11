@@ -329,7 +329,7 @@ router.delete('/buy-content/:post_id',auth,inputValidator.deletePostValidator,bu
  *-file
  *
 */
-router.post('/group/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
+router.post('/groups/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
 /*
  *
  *-email
@@ -342,7 +342,7 @@ router.post('/group/open',auth,fileHandler.uploadMiddleware,inputValidator.singl
  *-file
  *
 */
-router.post('/group/paid',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
+router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.singlePaidGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
 /*
  *
  *-email
@@ -350,7 +350,7 @@ router.post('/group/paid',auth,fileHandler.uploadMiddleware,inputValidator.singl
  *-invite_link
  *
 */
-router.post('/group/join',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.JoinGroup);
+router.post('/groups/join',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.JoinGroup);
 /*
  *
  *-email
@@ -359,7 +359,7 @@ router.post('/group/join',auth,inputValidator.singleGroupMgmtUploadValidator,gro
  *-friend_reference_number
  *
 */
-router.post('/group/remove-user',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.RemoveUserFromGroup);
+router.post('/groups/remove-user',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.RemoveUserFromGroup);
 /*
  *
  *-email
@@ -367,7 +367,7 @@ router.post('/group/remove-user',auth,inputValidator.singleGroupMgmtUploadValida
  *-group_id
  *
 */
-router.post('/group/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
+router.post('/groups/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
 /*
  *
  *-email
@@ -375,16 +375,25 @@ router.post('/group/leave',auth,inputValidator.removeGroupValidator,groupChatCon
  *-group_id
  *
 */
-router.delete('/group/:group_id',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
+router.delete('/groups/:group_id',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
 /*
  *
  *-email
  *-reference_number
  *-group_id
- *-friend_reference_number
+ *-member_reference_number
  *
 */
-router.post('/group/user',auth,inputValidator.userGroupMgmtValidator,groupChatController.AddUserToGroup);
+router.post('/groups/user',auth,inputValidator.userGroupMgmtValidator,groupChatController.AddUserToGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-page
+ *-limit
+ *
+*/
+router.get('/groups',auth,inputValidator.getGroupsValidator,groupChatController.ListGroups);
 /*
  *
  *-email

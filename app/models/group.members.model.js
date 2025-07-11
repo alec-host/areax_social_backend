@@ -57,6 +57,11 @@ module.exports = (sequelize, Sequelize) => {
             fields: ['is_deleted'],
             using: 'BTREE',
         },
+        {
+            name: 'group_id_index',
+            fields: ['group_id'],
+            using: 'BTREE',
+        },	    
     ],
     tableName: 'tbl_areax_group_members',
     timestamps: false,

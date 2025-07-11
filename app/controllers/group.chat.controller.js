@@ -12,9 +12,11 @@ const { groupExist } = require("./user/group/group.exist");
 const { getGroupMemberCount } = require("./user/group/group.member.count");
 const { deleteMessage } = require("./user/group/delete.group.message");
 const { editMessage } = require("./user/group/edit.group.message");
+const { listGroups } = require("./user/group/list.groups"); 
 const { getGroupChats } = require("./user/group/get.group.chats");
 const { sendMessage } = require("./user/group/group.messaging");
 const { removeUserFromGroup } = require("./user/group/remove.user.group");
+const { groupByReferenceNumber } = require("./user/group/group.reference.number.by.id");
 
 const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 
@@ -257,7 +259,7 @@ module.exports.JoinGroup = async(req,res) => {
 };
 
 module.exports.AddUserToGroup = async(req,res) => {
-  const { email, reference_number, friend_id, group_id } = req.body;
+  const { email, reference_number, member_reference_number, group_id } = req.body;
   const errors = validationResult(req);
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
@@ -281,11 +283,25 @@ module.exports.AddUserToGroup = async(req,res) => {
         });
         return;	     
      }
+    
+     const group = await groupByReferenceNumber(group_id);
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Group not found."
+        });
+        return;
+     }
+
+     const userDetail = await getUserDetailByReferenceNumber(member_reference_number); 
      const payload = {
         group_id,
-        user_id: friend_id,
-        reference_number
+        group_reference_number: group[1].group_reference_number,
+        user_id: userDetail._id,
+        reference_number: member_reference_number
      };
+	  
      const response = await addUserToGroup(payload);
      if(!response[0]){
         res.status(400).json({
@@ -598,7 +614,7 @@ module.exports.SendGroupChatMessage = async(req,res) => {
 */
 
 module.exports.RemoveUserFromGroup = async(req,res) => {
-  const { email, reference_number, group_id, friend_reference_number } = req.body;
+  const { email, reference_number, group_id, member_reference_number } = req.body;
   const errors = validationResult(req);
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
@@ -633,7 +649,7 @@ module.exports.RemoveUserFromGroup = async(req,res) => {
         return;
      }
 
-     const response = await removeUserFromGroup(group_id,friend_reference_number);
+     const response = await removeUserFromGroup(group_id,member_reference_number);
      if(!response[0]){
         res.status(400).json({
             success: false,
@@ -696,6 +712,63 @@ module.exports.LeaveGroup = async(req,res) => {
          success: true,
          error: false,
          message: 'You have left the group'
+     });
+  }catch(e){
+     if(e){
+        console.error(e);
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+  }
+};
+
+module.exports.ListGroups = async(req,res) => {
+  const { email, reference_number, page, limit } = req.query;
+  const errors = validationResult(req);
+  if(!errors.isEmpty()){
+     return res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+
+     const groupResp = await listGroups(page,limit);
+     if(!groupResp[0]){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: 'Failed to fetch group list'
+        });
+     }
+     res.status(200).json({
+         success: true,
+         error: false,
+         data: groupResp[1].data,
+         pagination: {
+           total: groupResp[1].total,
+           currentPage: groupResp[1].currentPage,
+           totalPages: groupResp[1].totalPages,
+	 },	     
+         message: 'List of group[s]'
      });
   }catch(e){
      if(e){

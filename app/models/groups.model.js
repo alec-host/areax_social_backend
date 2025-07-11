@@ -113,6 +113,11 @@ module.exports = (sequelize, Sequelize) => {
             name: 'payment_required_index',
             fields: ['payment_required'],
             using: 'BTREE',
+        },
+        {
+            name: 'invite_link_index',
+            fields: ['invite_link'],
+            using: 'BTREE',
         }	    
     ],
     tableName: 'tbl_areax_group_chats',
