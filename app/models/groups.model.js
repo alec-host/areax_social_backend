@@ -37,7 +37,6 @@ module.exports = (sequelize, Sequelize) => {
     invite_link: {
       type: DataTypes.STRING,
       allowNull: true,
-      unique: true
     },
     // New payment-related fields
     group_type: {
@@ -114,13 +113,17 @@ module.exports = (sequelize, Sequelize) => {
             fields: ['payment_required'],
             using: 'BTREE',
         },
+	{
+	    unique: true,	
+	    fields: ['invite_link']	
+	},
         {
             name: 'invite_link_index',
             fields: ['invite_link'],
             using: 'BTREE',
         }	    
     ],
-    tableName: 'tbl_areax_group_chats',
+    tableName: 'tbl_areax_groups',
     timestamps: false,
     collate: 'utf8mb4_general_ci',
     engine: 'InnoDB',	  

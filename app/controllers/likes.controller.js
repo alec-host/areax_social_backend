@@ -171,32 +171,25 @@ module.exports.RemoveLike = async(req,res) => {
         like_id: respLike[1]
      };
 
-     const response = await removeLike(payload);	
-     if(response[0]){	
-	const respPostId = await getPostByLikeId(email,reference_number,like_id);   
-	if(!respPostId[0]){
-            res.status(404).json({
-                success: false,
-                error: true,
-                message: `Like with post_id ${respPostId[1]} not found.`
-            });
-            return;
-	}     
-        redisClient = await connectToRedis();
-        await invalidatePostCache(redisClient,respPostId[1]);
-        await invalidateUserCache(redisClient,email,reference_number);     
-        res.status(200).json({
-            success: true,
-            error: false,
-            message: response[1]
-        });
-     }else{
+     const response = await removeLike(payload);
+     if(!response[0]){
         res.status(404).json({
             success: false,
             error: true,
             message: response[1]
         });
-     }
+	return;     
+     }	
+	  
+     redisClient = await connectToRedis();
+     await invalidatePostCache(redisClient,post_id);
+     await invalidateUserCache(redisClient,email,reference_number);     
+     
+     res.status(200).json({
+         success: true,
+         error: false,
+         message: response[1]
+     });
   }catch(e){
       if(e){
          res.status(500).json({

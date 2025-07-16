@@ -15,6 +15,7 @@ const { likedSavedReportedPost } = require("../utils/liked.saved.reported.post")
 const { getUserLikes } = require("./user/like/get.user.likes");
 const { getUserSavedPosts } = require("./user/saved/get.user.saved.post");
 const { getUserReportedPosts } = require("./user/wall/get.user.reported.posts");
+const { getReportedPosts } = require("./user/wall/get.reported.posts");
 
 const { connectToRedis, closeRedisConnection, setSocialWallCache, getSocialWallCache, setUserDataCache, getUserDataCache } = require("../cache/redis");
 
@@ -49,7 +50,7 @@ module.exports.GetWallContent = async(req,res) => {
         });	     
 	return;     
      }
-    
+     const is_public = 'everyone';
      const cachedData = await getSocialWallCache(
         redisClient, 
         post_type, 
@@ -77,8 +78,6 @@ module.exports.GetWallContent = async(req,res) => {
         getUserDataCache(redisClient, 'user_saved', email, reference_number),
         getUserDataCache(redisClient, 'user_reported', email, reference_number)
      ]);	
-
-     const is_public = 'everyone';
 
      // Fetch data from database
      const [postResp, likeresp, savedPostResp, reportedPostResp] = await Promise.all([
@@ -695,4 +694,38 @@ module.exports.DeleteSocialPost = async(req,res) => {
         });
      }
   }  
+};
+
+module.exports.GetReportedSocialPost = async(req,res) => {
+  const errors = validationResult(req);
+  const { page, limit } = req.query;
+  if(!errors.isEmpty()){
+     return res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+  try{
+     const response = await getReportedPosts(page, limit);   
+     if(!response[0]){
+         res.status(400).json({
+             success: false,
+             error: true,
+             message: response[2]
+         });
+         return;
+     }	  
+     res.status(200).json({
+         success: true,
+         error: false,
+         data: response[1].data,
+         pagination: response[1].pagination,
+         message: response[2]
+     });	  
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+  }
 };

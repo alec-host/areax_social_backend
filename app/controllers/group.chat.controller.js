@@ -294,7 +294,16 @@ module.exports.AddUserToGroup = async(req,res) => {
         return;
      }
 
-     const userDetail = await getUserDetailByReferenceNumber(member_reference_number); 
+     const userDetail = await getUserDetailByReferenceNumber(member_reference_number);
+     if(typeof userDetail === 'undefined'|| userDetail === null){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "User not found."
+        });
+        return;
+     }
+	  
      const payload = {
         group_id,
         group_reference_number: group[1].group_reference_number,
@@ -649,7 +658,17 @@ module.exports.RemoveUserFromGroup = async(req,res) => {
         return;
      }
 
-     const response = await removeUserFromGroup(group_id,member_reference_number);
+     const userDetail = await getUserDetailByReferenceNumber(member_reference_number);	  
+     if(typeof userDetail === 'undefined'|| userDetail === null){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "User not found."
+        });
+        return;
+     }
+
+     const response = await removeUserFromGroup(group_id,member_reference_number);	  
      if(!response[0]){
         res.status(400).json({
             success: false,

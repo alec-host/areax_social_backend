@@ -20,6 +20,9 @@ const fileHandler = require("../middleware/file.upload.handler");
 
 const auth = require("../middleware/auth");
 const basicAuth = require("../middleware/basic.auth");
+const error = require('../middleware/error.handler');
+
+module.exports = (app) => {
 
 const router = express.Router();
 
@@ -28,56 +31,56 @@ const router = express.Router();
  *-reference_number
  *
  * */
-router.get('/friend/potential-matches',auth,inputValidator.getUserDetailsValidator,friendController.GetPotentialFriendList);
+  router.get('/friend/potential-matches',auth,inputValidator.getUserDetailsValidator,friendController.GetPotentialFriendList);
 /*
  *-email
  *-reference_number
  *-friend_reference_number
  *
  * */
-router.post('/friend-request',auth,inputValidator.friendOpValidator,friendController.MakeFriendRequest);
+  router.post('/friend-request',auth,inputValidator.friendOpValidator,friendController.MakeFriendRequest);
 /*
  *
  *-email
  *-reference_number
  *
 */
-router.get('/friend-request',auth,inputValidator.getUserDetailsValidator,friendController.GetFriendRequest);
+  router.get('/friend-request',auth,inputValidator.getUserDetailsValidator,friendController.GetFriendRequest);
 /*
  *-email
  *-reference_number
  *-friend_reference_number
  *
  * */
-router.post('/friend-request/accept',auth,inputValidator.acceptFriendValidator,friendController.AcceptFriend);
+  router.post('/friend-request/accept',auth,inputValidator.acceptFriendValidator,friendController.AcceptFriend);
 /*
  *-email
  *-reference_number
  *-friend_category.
  *
  * */
-router.get('/friend',auth,inputValidator.getFriendDetailsValidator,friendController.MyFriendList);
+  router.get('/friend',auth,inputValidator.getFriendDetailsValidator,friendController.MyFriendList);
 /*
  *-email
  *-reference_number
  *-friend_reference_number
  *
  * */
-router.post('/friend/block',auth,inputValidator.friendOpValidator,friendController.BlockFriend);
+  router.post('/friend/block',auth,inputValidator.friendOpValidator,friendController.BlockFriend);
 /*
  *-email
  *-reference_number
  *-friend_reference_number
  *
  * */
-router.post('/friend/unblock',auth,inputValidator.friendOpValidator,friendController.UnblockFriend);
+  router.post('/friend/unblock',auth,inputValidator.friendOpValidator,friendController.UnblockFriend);
 /*
  *-email
  *-reference_number
  *-post_type
  *
  * */
-router.get('/social-content'/*,auth*/,inputValidator.getWallFeedValidator,wallController.GetWallContent);
+  router.get('/social-content'/*,auth*/,inputValidator.getWallFeedValidator,wallController.GetWallContent);
 /*
  *
  *-email
@@ -91,7 +94,7 @@ router.get('/social-content'/*,auth*/,inputValidator.getWallFeedValidator,wallCo
  *-is_minted_automatically
  *
  * */
-router.post('/social-content',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialWallUploadValidator,wallController.SaveSocialContent);
+  router.post('/social-content',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialWallUploadValidator,wallController.SaveSocialContent);
 /*
  *
  *-email
@@ -105,7 +108,7 @@ router.post('/social-content',auth,fileHandler.uploadMiddleware,inputValidator.s
  *-is_minted_automatically
  *
  * */
-router.post('/social-content/url',auth,inputValidator.socialWallURLValidator,wallController.SaveSocialContent);
+  router.post('/social-content/url',auth,inputValidator.socialWallURLValidator,wallController.SaveSocialContent);
 /*
  *
  *-email
@@ -113,7 +116,7 @@ router.post('/social-content/url',auth,inputValidator.socialWallURLValidator,wal
  *-post_id
  *
  * */
-router.delete('/social-content/:post_id',auth,inputValidator.deletePostValidator,wallController.DeleteSocialPost);
+  router.delete('/social-content/:post_id',auth,inputValidator.deletePostValidator,wallController.DeleteSocialPost);
 /*
  *
  *-email
@@ -124,7 +127,7 @@ router.delete('/social-content/:post_id',auth,inputValidator.deletePostValidator
  *-category
  *
  * */
-router.post('/social-content/ai',basicAuth,inputValidator.socialAiMediaURLValidator,wallController.SaveSocialAIContent);
+  router.post('/social-content/ai',basicAuth,inputValidator.socialAiMediaURLValidator,wallController.SaveSocialAIContent);
 /*
  *
  *-email
@@ -135,7 +138,7 @@ router.post('/social-content/ai',basicAuth,inputValidator.socialAiMediaURLValida
  *-share_on_social_wall
  *
  * */
-router.post('/social-content/show',auth,fileHandler.uploadMiddleware,inputValidator.singleShowUploadValidator,wallController.SaveShowContent);
+  router.post('/social-content/show',auth,fileHandler.uploadMiddleware,inputValidator.singleShowUploadValidator,wallController.SaveShowContent);
 /*
  *
  *-email
@@ -146,7 +149,7 @@ router.post('/social-content/show',auth,fileHandler.uploadMiddleware,inputValida
  *-share_on_social_wall
  *
  * */
-router.post('/social-content/show/url',auth,inputValidator.showMediaURLValidator,wallController.SaveShowContent);
+  router.post('/social-content/show/url',auth,inputValidator.showMediaURLValidator,wallController.SaveShowContent);
 /*
  *
  *-email
@@ -156,7 +159,7 @@ router.post('/social-content/show/url',auth,inputValidator.showMediaURLValidator
  *-is_public {1 - public, 0 - private}
  *
  * */
-router.post('/group-share-content',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialSharedUploadValidator,wallController.SaveShareContent);
+  router.post('/group-share-content',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialSharedUploadValidator,wallController.SaveShareContent);
 /*
  *
  *-email
@@ -166,7 +169,7 @@ router.post('/group-share-content',auth,fileHandler.uploadMiddleware,inputValida
  *-is_public {1 - public, 0 - private}
  *
  * */
-router.post('/group-share-content/url',auth,inputValidator.socialSharedMediaURLValidator,wallController.SaveShareContent);
+  router.post('/group-share-content/url',auth,inputValidator.socialSharedMediaURLValidator,wallController.SaveShareContent);
 /*
  *
  *-email
@@ -174,7 +177,7 @@ router.post('/group-share-content/url',auth,inputValidator.socialSharedMediaURLV
  *-post_id
  *
  * */
-router.post('/like',auth,inputValidator.addLikeCommentValidator,likeController.AddLike);
+  router.post('/like',auth,inputValidator.addLikeCommentValidator,likeController.AddLike);
 /*
  *
  *-email
@@ -182,21 +185,21 @@ router.post('/like',auth,inputValidator.addLikeCommentValidator,likeController.A
  *-like_id
  *
  * */
-router.delete('/like/:post_id',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
+  router.delete('/like/:post_id',auth,inputValidator.removeLikeValidator,likeController.RemoveLike);
 /*
  *-email
  *-reference_number
  *-post_id
  *
  * */
-router.get('/like'/*,auth*/,inputValidator.getLikeCommentValidator,likeController.GetUserLikes);
+  router.get('/like'/*,auth*/,inputValidator.getLikeCommentValidator,likeController.GetUserLikes);
 /*
  *-email
  *-reference_number
  *-post_id
  *
  * */
-router.get('/like/count',auth,inputValidator.getLikeCommentValidator,likeController.GetLikeCount);
+  router.get('/like/count',auth,inputValidator.getLikeCommentValidator,likeController.GetLikeCount);
 /*
  *
  *-email
@@ -205,7 +208,7 @@ router.get('/like/count',auth,inputValidator.getLikeCommentValidator,likeControl
  *-comment
  *
  * */
-router.post('/comment',auth,inputValidator.addCommentValidator,commentController.AddComment);
+  router.post('/comment',auth,inputValidator.addCommentValidator,commentController.AddComment);
 /*
  *
  *-email
@@ -214,7 +217,7 @@ router.post('/comment',auth,inputValidator.addCommentValidator,commentController
  *-comment
  *
  * */
-router.patch('/comment',auth,inputValidator.editCommentValidator,commentController.EditComment);
+  router.patch('/comment',auth,inputValidator.editCommentValidator,commentController.EditComment);
 /*
  *
  *-email
@@ -222,21 +225,21 @@ router.patch('/comment',auth,inputValidator.editCommentValidator,commentControll
  *-comment_id
  *
  * */
-router.delete('/comment/:comment_id',auth,inputValidator.removeCommentValidator,commentController.RemoveComment);
+  router.delete('/comment/:comment_id',auth,inputValidator.removeCommentValidator,commentController.RemoveComment);
 /*
  *-email
  *-reference_number
  *-post_id
  *
  * */
-router.get('/comment',auth,inputValidator.getLikeCommentValidator,commentController.GetComment);
+  router.get('/comment',auth,inputValidator.getLikeCommentValidator,commentController.GetComment);
 /*
  *-email
  *-reference_number
  *-post_id
  *
  * */
-router.get('/comment/count',auth,inputValidator.getLikeCommentValidator,commentController.GetCommentCount);
+  router.get('/comment/count',auth,inputValidator.getLikeCommentValidator,commentController.GetCommentCount);
 /*
  *
  *-email
@@ -249,14 +252,14 @@ router.get('/comment/count',auth,inputValidator.getLikeCommentValidator,commentC
  *-close_time
  *
  * */
-router.post('/closed-bid',auth,inputValidator.showMediaURLValidator,wallController.SaveShowClosedBidContent);
+  router.post('/closed-bid',auth,inputValidator.showMediaURLValidator,wallController.SaveShowClosedBidContent);
 /*
  *-email
  *-reference_number
  *-post_id
  *
  * */
-router.get('/closed-bid',auth,inputValidator.getLikeCommentValidator,bidController.GetClosedBid);
+  router.get('/closed-bid',auth,inputValidator.getLikeCommentValidator,bidController.GetClosedBid);
 /*
  *
  *-email
@@ -268,14 +271,14 @@ router.get('/closed-bid',auth,inputValidator.getLikeCommentValidator,bidControll
  *-share_on_social_wall
  *
  * */
-router.post('/open-bid',auth,inputValidator.showMediaURLValidator,wallController.SaveShowOpenBidContent);
+  router.post('/open-bid',auth,inputValidator.showMediaURLValidator,wallController.SaveShowOpenBidContent);
 /*
  *-email
  *-reference_number
  *-post_id
  *
  * */
-router.get('/open-bid',auth,inputValidator.getLikeCommentValidator,bidController.GetOpenBid);
+  router.get('/open-bid',auth,inputValidator.getLikeCommentValidator,bidController.GetOpenBid);
 /*
  *
  *-email
@@ -287,7 +290,7 @@ router.get('/open-bid',auth,inputValidator.getLikeCommentValidator,bidController
  *-share_on_social_wall
  *
  * */
-router.post('/buy-content',auth,fileHandler.uploadMiddleware,inputValidator.singleShowUploadValidator,wallController.SaveShowContent);
+  router.post('/buy-content',auth,fileHandler.uploadMiddleware,inputValidator.singleShowUploadValidator,wallController.SaveShowContent);
 /*
  *
  *-email
@@ -299,7 +302,7 @@ router.post('/buy-content',auth,fileHandler.uploadMiddleware,inputValidator.sing
  *-share_on_social_wall
  *
  * */
-router.post('/buy-content/url',auth,inputValidator.showMediaURLValidator,wallController.SaveShowContent);
+  router.post('/buy-content/url',auth,inputValidator.showMediaURLValidator,wallController.SaveShowContent);
 /*
  *
  *-email
@@ -310,7 +313,7 @@ router.post('/buy-content/url',auth,inputValidator.showMediaURLValidator,wallCon
  *-share_on_social_wall
  *
  * */
-router.patch('/buy-content',auth,inputValidator.editItemValidator,buyController.EditBuyPostContent);
+  router.patch('/buy-content',auth,inputValidator.editItemValidator,buyController.EditBuyPostContent);
 /*
  *
  *-email
@@ -318,7 +321,7 @@ router.patch('/buy-content',auth,inputValidator.editItemValidator,buyController.
  *-post_id
  *
  * */
-router.delete('/buy-content/:post_id',auth,inputValidator.deletePostValidator,buyController.DeleteBuyPostContent);
+  router.delete('/buy-content/:post_id',auth,inputValidator.deletePostValidator,buyController.DeleteBuyPostContent);
 /*
  *
  *-email
@@ -329,7 +332,7 @@ router.delete('/buy-content/:post_id',auth,inputValidator.deletePostValidator,bu
  *-file
  *
 */
-router.post('/groups/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
+  router.post('/groups/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
 /*
  *
  *-email
@@ -350,32 +353,7 @@ router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.sing
  *-invite_link
  *
 */
-router.post('/groups/join',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.JoinGroup);
-/*
- *
- *-email
- *-reference_number
- *-group_id
- *-friend_reference_number
- *
-*/
-router.post('/groups/remove-user',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.RemoveUserFromGroup);
-/*
- *
- *-email
- *-reference_number
- *-group_id
- *
-*/
-router.post('/groups/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
-/*
- *
- *-email
- *-reference_number
- *-group_id
- *
-*/
-router.delete('/groups/:group_id',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
+  router.post('/groups/join',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.JoinGroup);
 /*
  *
  *-email
@@ -384,7 +362,32 @@ router.delete('/groups/:group_id',auth,inputValidator.removeGroupValidator,group
  *-member_reference_number
  *
 */
-router.post('/groups/user',auth,inputValidator.userGroupMgmtValidator,groupChatController.AddUserToGroup);
+  router.post('/groups/remove-user',auth,inputValidator.userGroupMgmtValidator,groupChatController.RemoveUserFromGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_id
+ *
+*/
+  router.post('/groups/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_id
+ *
+*/
+  router.delete('/groups/:group_id',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_id
+ *-member_reference_number
+ *
+*/
+  router.post('/groups/user',auth,inputValidator.userGroupMgmtValidator,groupChatController.AddUserToGroup);
 /*
  *
  *-email
@@ -393,7 +396,7 @@ router.post('/groups/user',auth,inputValidator.userGroupMgmtValidator,groupChatC
  *-limit
  *
 */
-router.get('/groups',auth,inputValidator.getGroupsValidator,groupChatController.ListGroups);
+  router.get('/groups',auth,inputValidator.getGroupsValidator,groupChatController.ListGroups);
 /*
  *
  *-email
@@ -421,7 +424,7 @@ router.get('/groups',auth,inputValidator.getGroupsValidator,groupChatController.
  *-target_reference_number
  *
 */
-router.get('/profile',auth,inputValidator.targetProfileValidator,friendController.ViewTargetProfile);
+  router.get('/profile',auth,inputValidator.targetProfileValidator,friendController.ViewTargetProfile);
 /*
  *
  *-email
@@ -429,7 +432,7 @@ router.get('/profile',auth,inputValidator.targetProfileValidator,friendControlle
  *-privacy_status
  *
 */
-router.patch('/profile/privacy-status',auth,inputValidator.changePrivacyStatusValidator,changeProfileStatusController.ChangeProfileStatus);
+  router.patch('/profile/privacy-status',auth,inputValidator.changePrivacyStatusValidator,changeProfileStatusController.ChangeProfileStatus);
 /*
  *
  *-email
@@ -437,7 +440,7 @@ router.patch('/profile/privacy-status',auth,inputValidator.changePrivacyStatusVa
  *-file
  *
 */
-router.post('/file/upload',auth,inputValidator.uploadS3Validator,s3UploadMiddleware,fileController.uploadFile);
+  router.post('/file/upload',auth,inputValidator.uploadS3Validator,s3UploadMiddleware,fileController.uploadFile);
 /*
  *
  *-email
@@ -447,7 +450,7 @@ router.post('/file/upload',auth,inputValidator.uploadS3Validator,s3UploadMiddlew
  *-limit
  *
 */
-router.get('/file/fetch',auth,inputValidator.getUploadedFilesValidator,fileController.getFiles);
+  router.get('/file/fetch',auth,inputValidator.getUploadedFilesValidator,fileController.getFiles);
 /*
  *
  *-email
@@ -455,14 +458,14 @@ router.get('/file/fetch',auth,inputValidator.getUploadedFilesValidator,fileContr
  *-id
  *
 */
-router.get('/file/:file_id',auth,inputValidator.getUploadedFileValidator,fileController.getFile);
+  router.get('/file/:file_id',auth,inputValidator.getUploadedFileValidator,fileController.getFile);
 /*
  *
  *-email
  *-reference_number
  *
 */
-router.delete('/file/:file_id',auth,inputValidator.deleteUploadedFileValidator,fileController.deleteFile);
+  router.delete('/file/:file_id',auth,inputValidator.deleteUploadedFileValidator,fileController.deleteFile);
 /*
  *
  *-email
@@ -471,7 +474,7 @@ router.delete('/file/:file_id',auth,inputValidator.deleteUploadedFileValidator,f
  *-post_id
  *
  * */
-router.patch('/toggle/like/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleLikeFlag);
+  router.patch('/toggle/like/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleLikeFlag);
 /*
  *
  *-email
@@ -479,7 +482,7 @@ router.patch('/toggle/like/:post_id',auth,inputValidator.togglFlagValidator,flag
  *-post_id
  *
  * */
-router.patch('/toggle/save/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleSaveFlag);
+  router.patch('/toggle/save/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleSaveFlag);
 /*
  *
  *-email
@@ -487,7 +490,7 @@ router.patch('/toggle/save/:post_id',auth,inputValidator.togglFlagValidator,flag
  *-post_id
  *
  * */
-router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidator,flagController.toggleReportFlag);
+  router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidator,flagController.toggleReportFlag);
 /*
  *
  *-email
@@ -496,7 +499,7 @@ router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidat
  *-post_id
  *
  * */
-router.post('/report'/*,auth*/,inputValidator.reportedPostValidator,reportController.reportedPost);
+  router.post('/report'/*,auth*/,inputValidator.reportedPostValidator,reportController.reportedPost);
 /*
  *
  *-email
@@ -506,7 +509,7 @@ router.post('/report'/*,auth*/,inputValidator.reportedPostValidator,reportContro
  *-comment_id
  *
  * */
-router.post('/comment/reply',auth,inputValidator.commentReplyValidator,commentController.AddCommentReply);
+  router.post('/comment/reply',auth,inputValidator.commentReplyValidator,commentController.AddCommentReply);
 /*
  *
  *-email
@@ -514,7 +517,7 @@ router.post('/comment/reply',auth,inputValidator.commentReplyValidator,commentCo
  *-comment_id
  *
  * */
-router.get('/comment/reply',auth,inputValidator.getCommentReplyValidator,commentController.GetCommentReplies);
+  router.get('/comment/reply',auth,inputValidator.getCommentReplyValidator,commentController.GetCommentReplies);
 /*
  *
  *-email
@@ -522,7 +525,7 @@ router.get('/comment/reply',auth,inputValidator.getCommentReplyValidator,comment
  *-post_id
  *
  * */
-router.post('/save',/*auth,*/inputValidator.addSavedPostValidator,savedPostController.addSavedPost);
+  router.post('/save',/*auth,*/inputValidator.addSavedPostValidator,savedPostController.addSavedPost);
 /*
  *
  *-email
@@ -530,13 +533,24 @@ router.post('/save',/*auth,*/inputValidator.addSavedPostValidator,savedPostContr
  *-post_id
  *
  * */
-router.delete('/save/:post_id',/*auth,*/inputValidator.deletePostValidator,savedPostController.removeSavedPost);
+  router.delete('/save/:post_id',/*auth,*/inputValidator.deletePostValidator,savedPostController.removeSavedPost);
 /*
  *
  *-email
  *-reference_number
  *
  * */
-router.get('/save',/*auth,*/inputValidator.getSavedPostValidator,savedPostController.getSavedPost);
+  router.get('/save',/*auth,*/inputValidator.getSavedPostValidator,savedPostController.getSavedPost);
+/*
+ *
+ *-page
+ *-limit
+ *
+ * */
+  router.get('/report',basicAuth,inputValidator.getPaginationValidator,wallController.GetReportedSocialPost);	
 
-module.exports = router;
+
+  app.use('/social/api/v1',router);	
+  app.use(error.errorHandler);
+  app.use((req, res, next) => { res.status(404).json({ success: false, error: true, error: true, message: 'Endpoint not found or parameter missing' }); });
+};

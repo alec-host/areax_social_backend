@@ -710,6 +710,14 @@ const getSavedPostValidator = [
    query('reference_number', 'Reference number must be provided').not().isEmpty(),
 ];
 
+const getPaginationValidator = [
+    query('page')
+      .exists({ checkFalsy: true }).withMessage('page must be provided')
+      .isInt({ min: 1 }).withMessage('page must be an integer >= 1'),
+    query('limit')
+      .exists({ checkFalsy: true }).withMessage('limit must be provided')
+      .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),
+];
 /*
 const formDataValidator = [
     check('email', 'Email cannot be Empty').not().isEmpty(),
@@ -736,5 +744,5 @@ module.exports = {
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
     deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
     addSavedPostValidator,getSavedPostValidator,singlePaidGroupMgmtUploadValidator,
-    getGroupsValidator	
+    getGroupsValidator,getPaginationValidator	
 };

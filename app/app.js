@@ -3,15 +3,28 @@ const morgan = require("morgan");
 const express = require('express');
 const bodyParser = require('body-parser');
 const { db2 } = require("./models");
-const appRoutes = require('./routes/app.routes');
-const error = require('./middleware/error.handler');
+
 const { APP_SERVER_PORT } = require("./constants/app_constants");
 
 const app = express();
 const PORT = APP_SERVER_PORT;
 
 app.use(cors());
-app.use(express.json());
+
+//-.trust first proxy.
+app.set('trust proxy', 1);
+
+/*
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later'
+});
+app.use("/api/v1/", limiter);
+*/
+
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 app.use(morgan('tiny'));
 
@@ -23,10 +36,12 @@ db2.sequelize.sync(/*{ force: false, alter: true  }*/)
    console.log("Failed to sync db: " + err.message);
 });
 
-app.use('/social/api/v1',appRoutes);
-
-app.use(error.errorHandler);
+require("./routes/app.routes")(app);
 
 app.listen(PORT, () => {
     console.log(`SOCIAL SERVER RUNNING ON PORT: ${PORT}`);
+});
+
+app.use('*', (req, res) => {
+    res.status(404).json({ success: false, message: "Not found" });
 });
