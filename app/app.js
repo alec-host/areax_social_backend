@@ -38,6 +38,8 @@ db2.sequelize.sync(/*{ force: false, alter: true  }*/)
 
 require("./routes/app.routes")(app);
 
+console.log(`Worker ${process.pid} started`);
+
 app.listen(PORT, () => {
     console.log(`SOCIAL SERVER RUNNING ON PORT: ${PORT}`);
 });

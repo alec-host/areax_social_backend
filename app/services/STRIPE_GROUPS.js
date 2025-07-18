@@ -1,5 +1,6 @@
 // services/stripeService.js
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { STRIPE_CLIENT_ID,STRIPE_CLIENT_SECRET,STRIPE_WEBHOOK_SECRET,STRIPE_API_URL,STRIPE_ACCOUNT,STRIPE_REDIRECT_URL } = require("../constants/app_constants");
+const stripe = require('stripe')(STRIPE_CLIENT_SECRET);
 
 class StripeService {
   // Create a product and price for a group
@@ -32,9 +33,10 @@ class StripeService {
         });
       }
 
-      return { product, price };
+      return [true,{ product, price }];
     } catch (error) {
-      throw new Error(`Failed to create Stripe product: ${error.message}`);
+      console.error(`Failed to create Stripe product: ${error.message}`);	    
+      return [false,`Failed to create Stripe product: ${error.message}`];
     }
   }
 

@@ -12,6 +12,10 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    group_reference_number: {
+      type: DataTypes.STRING(65),
+      allowNull: true
+    },	  
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false
@@ -85,7 +89,12 @@ module.exports = (sequelize, Sequelize) => {
         name: 'user_reference_number_index',
         fields: ['user_reference_number'],
         using: 'BTREE',
-      },	    
+      },
+      {
+        name: 'group_reference_number_index',
+        fields: ['group_reference_number'],
+        using: 'BTREE',
+      }	    
     ],
     tableName: 'tbl_group_subscriptions',
     timestamps: false,

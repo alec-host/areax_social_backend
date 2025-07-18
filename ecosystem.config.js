@@ -3,8 +3,8 @@ module.exports = {
     {
       name: 'AREAX_SOCIAL_APP',
       script: 'app/app.js',
-      exec_mode: 'cluster',
-      instances: '3',
+      exec_mode: 'fork',
+      instances: '1',
       interpreter: 'node',
       max_memory_restart: '180M',
       merge_logs: true,

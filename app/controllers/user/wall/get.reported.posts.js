@@ -1,3 +1,4 @@
+const { Sequelize } = require('sequelize');
 const { db2 } = require("../../../models");
 
 const ReportPosts = db2.report_post;
@@ -7,7 +8,7 @@ module.exports.getReportedPosts = async (page=1,limit=100) => {
   const offset = (page - 1) * limit;	
   try{ 
      const records = await ReportPosts.findAndCountAll({
-        attributes:['email','reference_number','media_url','description','vote_type','feedback','created_at'],
+        attributes:['creator_email','creator_reference_number',[Sequelize.col('email'),'reporter_email'],[Sequelize.col('reference_number'),'reporter_reference_number'],'media_url','description','vote_type','feedback','created_at'],
 	limit: parseInt(limit),
 	offset: parseInt(offset),
 	order: [['created_at', 'DESC']],    

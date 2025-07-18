@@ -3,6 +3,7 @@ const { validationResult } = require("express-validator");
 const { reportPostExist } = require("./user/wall/reported.post.exist");
 const { saveReportedPost } = require('./user/wall/save.reported.post');
 const { getPostCountById } = require("./user/wall/post.exist");
+const { getPostById } = require("./user/wall/get.post.by.post.id");
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
@@ -54,6 +55,16 @@ class ReportPostController {
             return;
          }
 
+	 const postResponse = await getPostById(post_id);  
+         if(!postResponse[0]){
+            res.status(404).json({
+                success: false,
+                error: true,
+                message: postResponse[1]
+            });
+            return;
+         }	      
+
 	 const reported_post_found = await reportPostExist({ reference_number,post_id });     
 	      
          if(reported_post_found[1] > 0){
@@ -72,7 +83,11 @@ class ReportPostController {
             reference_number,
 	    vote_type,
 	    feedback,
-	    post_id 
+	    post_id,
+	    media_url: postResponse[1].media_url,
+	    description: postResponse[1].description,
+            creator_email: postResponse[1].email,
+	    creator_reference_number: postResponse[1].reference_number	 
 	 };
 
 	 const response = await saveReportedPost(payload);   

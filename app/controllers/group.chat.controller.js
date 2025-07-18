@@ -9,6 +9,7 @@ const { addUserToGroup } = require("./user/group/add.user.group");
 const { deleteGroup } = require("./user/group/delete.group");
 const { isGroupAdmin } = require("./user/group/is.group.admin");
 const { groupExist } = require("./user/group/group.exist");
+const { groupById } = require("./user/group/group.by.id");
 const { getGroupMemberCount } = require("./user/group/group.member.count");
 const { deleteMessage } = require("./user/group/delete.group.message");
 const { editMessage } = require("./user/group/edit.group.message");
@@ -17,6 +18,12 @@ const { getGroupChats } = require("./user/group/get.group.chats");
 const { sendMessage } = require("./user/group/group.messaging");
 const { removeUserFromGroup } = require("./user/group/remove.user.group");
 const { groupByReferenceNumber } = require("./user/group/group.reference.number.by.id");
+const { groupPayment } = require("./user/group/group.payment");
+const { groupSubscription } = require("./user/group/group.subscription");
+const { createGroupPayment } = require("./user/group/create.payment");
+const { createGroupSubscription } = require("./user/group/create.subscription");
+
+const { stripeService } = require("../services/STRIPE_GROUPS");
 
 const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 
@@ -789,6 +796,97 @@ module.exports.ListGroups = async(req,res) => {
 	 },	     
          message: 'List of group[s]'
      });
+  }catch(e){
+     if(e){
+        console.error(e);
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+  }
+};
+
+module.exports.InitiatePayment = async(req,res) => {
+  const { email, reference_number, group_id } = req.body;
+  const errors = validationResult(req);
+  if(!errors.isEmpty()){
+     return res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+
+  try{
+     const group = await groupById(group_id);
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Group not found"
+        });
+        return;
+     }
+     if(!group[1].payment_required){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Paid group not found"
+        });
+        return;
+     } 
+     const hasPaid = await groupPayment(email,reference_number,group_id) || await groupSubscription(email,reference_number,group_id);	  
+     if(hasPaid){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "You already have access to this group."
+        });
+        return;        
+     }	
+     let paymentIntent;
+     if(group[1].payment_type === 'subscription'){
+        const customer = await stripeService.createCustomer(group[1]);
+	const subscription = await stripeService.createSubscription(customer.id,group[1].stripe_price_id,{ group_reference_number: group[1].group_reference_number, user_reference_id: reference_number }); 
+	//create subscription user record entry     
+	const payload = {
+           group_id,
+	   user_id,
+	   user_email: email,
+	   user_reference_number: reference_number,
+	   stripe_subscription_id: subscription.id,
+	   status: subscription.status,
+	   current_period_start: new Date(subscription.current_period_start * 1000),
+	   current_period_end: new Date(subscription.current_period_end * 1000),
+           created_at: new Date()		
+	};
+	const responseSubscription = await createGroupSubscription(payload);     
+        res.status(200).json({
+            success: true,
+            error: false,
+	    data: { subscription_id: subscription.id },	
+            message: "Subscription initiated"
+	});     
+     }else{
+        paymmentIntent = await stripeService.createPaymentIntent(group[1].price_amount,group[1].price_currency,{ group_reference_number: group[1].group_reference_number, user_reference_id: reference_number });
+	//create payment user record entry
+        const payload = {
+	   group_id,
+	   user_id,
+	   user_email: email,
+	   user_reference_number: reference_number,
+	   payment_type: group[1].payment_type,
+	   amount: group[1].price_amount,
+           currency: group[1].price_currency,		
+	   stripe_payment_intent_id: paymentIntent.id,
+	   status: 'pending',
+	   payment_date: new Date()
+	};
+        res.status(200).json({
+            success: true,
+            error: false,
+            data: { client_secret: paymentIntent.client_secret,payment_intent_id: paymentIntent.id },
+            message: "Payment intent"
+        });	
+     }  
   }catch(e){
      if(e){
         console.error(e);

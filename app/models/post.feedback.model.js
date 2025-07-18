@@ -6,6 +6,14 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    creator_email: {
+      type: DataTypes.STRING(65),
+      allowNull: true	    
+    },
+    creator_reference_number:{
+      type: DataTypes.STRING(65),	   
+      allowNull: true	    
+    },	  
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false
