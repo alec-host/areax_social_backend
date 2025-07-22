@@ -8,7 +8,7 @@ module.exports.getGroupMemberCount = async(group_id) => {
 
     return [true, groupCount];
   } catch (error) {
-    console.error('Error adding user to group:', error.message);
+    console.error("Error: getting group member`s count:", error.message);
     return [false, error.message];
   }
 };

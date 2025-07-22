@@ -20,7 +20,11 @@ module.exports = (sequelize, Sequelize) => {
     },
     username: {
       type: DataTypes.STRING(65),
-    },  
+    },
+    group_reference_number: {
+      type: DataTypes.STRING(65),
+      allowNull: true	    
+    },	  
     profile_image_url: {
        type: DataTypes.TEXT,
     },	  
@@ -44,7 +48,7 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: true
     },	  
     post_type: {
-      type: DataTypes.ENUM('social-board','show-board','cross-list','chat-group','social-ai-board'),
+      type: DataTypes.ENUM('social-board','show-board','cross-board','group-board','social-ai-board'),
       allowNull: false,
     },	 
     bid_type: {
@@ -113,6 +117,11 @@ module.exports = (sequelize, Sequelize) => {
             fields: ['reference_number'],
             using: 'BTREE',
         },
+	{
+            name: 'group_reference_number_index',
+            fields: ['group_reference_number'],
+            using: 'BTREE',      
+	},    
 	{
             name: 'email_index',
             fields: ['email'],

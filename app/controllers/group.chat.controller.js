@@ -8,7 +8,7 @@ const { createGroup } = require("./user/group/create.group");
 const { addUserToGroup } = require("./user/group/add.user.group");
 const { deleteGroup } = require("./user/group/delete.group");
 const { isGroupAdmin } = require("./user/group/is.group.admin");
-const { groupExist } = require("./user/group/group.exist");
+const { groupInviteLinkExist } = require("./user/group/group.invite.link");
 const { groupById } = require("./user/group/group.by.id");
 const { getGroupMemberCount } = require("./user/group/group.member.count");
 const { deleteMessage } = require("./user/group/delete.group.message");
@@ -20,10 +20,12 @@ const { removeUserFromGroup } = require("./user/group/remove.user.group");
 const { groupByReferenceNumber } = require("./user/group/group.reference.number.by.id");
 const { groupPayment } = require("./user/group/group.payment");
 const { groupSubscription } = require("./user/group/group.subscription");
+const { groupPaymentStatus } = require("./user/group/group.payment.status");
+const { groupSubscriptionStatus } = require("./user/group/group.subscription.status");
 const { createGroupPayment } = require("./user/group/create.payment");
 const { createGroupSubscription } = require("./user/group/create.subscription");
 
-const { stripeService } = require("../services/STRIPE_GROUPS");
+//const { stripeService } = require("../services/STRIPE_GROUPS");
 
 const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 
@@ -202,16 +204,17 @@ module.exports.JoinGroup = async(req,res) => {
         return;
      }
 
-     const group = await groupExist(invite_link);
-     if(!group[0]){
+     const groupInvite = await groupInviteLinkExist(invite_link);
+     if(!groupInvite[0]){
         res.status(404).json({
             success: false,
             error: true,
-            message: "Group not found"
+            message: groupInvite[1]
         });
         return;
      }
-     const groupMemberCount = await getGroupMemberCount(group[1].group_id);
+
+     const groupMemberCount = await getGroupMemberCount(groupInvite[1].group_id);
      if(!groupMemberCount[0]){
         res.status(400).json({
             success: false,
@@ -221,7 +224,7 @@ module.exports.JoinGroup = async(req,res) => {
         return;
      }
 
-     if(group[1].max_members && groupMemberCount[1] >= group[1].max_members){
+     if(groupInvite[1].max_members && groupMemberCount[1] >= groupInvite[1].max_members){
         res.status(403).json({
             success: false,
             error: true,
@@ -230,21 +233,21 @@ module.exports.JoinGroup = async(req,res) => {
         return;
      }
 
-     if(group[1].payment_required){
-        const hasPaid = true;
+     if(groupInvite[1].payment_required){
+        const hasPaid = await groupPaymentStatus(email,reference_number,groupInvite[1].group_id) || await groupSubscriptionStatus(email,reference_number,groupInvite[1].group_id);
         if(!hasPaid){
-           return res.status(403).json({ success: false, error: true,  message: 'Payment required before joining' });
+           return res.status(403).json({ success: false, error: true,  message: 'Payment required' });
         }
      }
 
      const userDetail = await getUserDetailByReferenceNumber(reference_number);
 
-     const resp = await addUserToGroup({ group_id: group[1].group_id, group_reference_number: group[1].group_reference_number, user_id: userDetail._id, reference_number });
+     const resp = await addUserToGroup({ group_id: groupInvite[1].group_id, group_reference_number: groupInvite[1].group_reference_number, user_id: userDetail._id, reference_number });
      if(!resp[0]){
         res.status(400).json({
             success: false,
             error: true,
-            message: "Failed to add user to a group"
+            message: resp[1]
         });
         return;
      }
@@ -266,7 +269,7 @@ module.exports.JoinGroup = async(req,res) => {
 };
 
 module.exports.AddUserToGroup = async(req,res) => {
-  const { email, reference_number, member_reference_number, group_id } = req.body;
+  const { email, reference_number, member_reference_number, group_reference_number } = req.body;
   const errors = validationResult(req);
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
@@ -290,13 +293,13 @@ module.exports.AddUserToGroup = async(req,res) => {
         });
         return;	     
      }
-    
-     const group = await groupByReferenceNumber(group_id);
+     
+     const group = await groupByReferenceNumber(group_reference_number);
      if(!group[0]){
         res.status(404).json({
             success: false,
             error: true,
-            message: "Group not found."
+            message: group[1]
         });
         return;
      }
@@ -312,8 +315,8 @@ module.exports.AddUserToGroup = async(req,res) => {
      }
 	  
      const payload = {
-        group_id,
-        group_reference_number: group[1].group_reference_number,
+	group_id: group[1].group_id,
+        group_reference_number,
         user_id: userDetail._id,
         reference_number: member_reference_number
      };
@@ -347,7 +350,7 @@ module.exports.AddUserToGroup = async(req,res) => {
 
 module.exports.DeleteGroup = async(req,res) => {
   const { email, reference_number } = req.body;
-  const { group_id } = req.params;
+  const { group_reference_number } = req.params;
   const errors = validationResult(req);
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
@@ -381,7 +384,18 @@ module.exports.DeleteGroup = async(req,res) => {
         });
         return;
      }
-     const response = await deleteGroup(group_id);
+
+     const group = await groupByReferenceNumber(group_reference_number);	  
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: group[1]
+        });
+        return;
+     }
+	  
+     const response = await deleteGroup(group[1].group_id);
      if(!response[0]){
         res.status(400).json({
             success: false,
@@ -630,7 +644,7 @@ module.exports.SendGroupChatMessage = async(req,res) => {
 */
 
 module.exports.RemoveUserFromGroup = async(req,res) => {
-  const { email, reference_number, group_id, member_reference_number } = req.body;
+  const { email, reference_number, group_reference_number, member_reference_number } = req.body;
   const errors = validationResult(req);
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
@@ -675,13 +689,24 @@ module.exports.RemoveUserFromGroup = async(req,res) => {
         return;
      }
 
-     const response = await removeUserFromGroup(group_id,member_reference_number);	  
+     const group = await groupByReferenceNumber(group_reference_number);
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: group[1]
+        });
+        return;
+     }
+	  
+     const response = await removeUserFromGroup(group[1].group_id,member_reference_number);	  
      if(!response[0]){
         res.status(400).json({
             success: false,
             error: true,
             message: response[1]
         });
+	return;     
      }
      res.status(200).json({
          success: true,
@@ -701,7 +726,7 @@ module.exports.RemoveUserFromGroup = async(req,res) => {
 };
 
 module.exports.LeaveGroup = async(req,res) => {
-  const { email, reference_number, group_id } = req.body;
+  const { email, reference_number, group_reference_number } = req.body;
   const errors = validationResult(req);
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
@@ -726,13 +751,24 @@ module.exports.LeaveGroup = async(req,res) => {
         return;
      }
 
-     const response = await removeUserFromGroup(group_id,reference_number);
+     const group = await groupByReferenceNumber(group_reference_number);
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: group[1]
+        });
+        return;
+     }
+	  
+     const response = await removeUserFromGroup(group[1].group_id,reference_number);
      if(!response[0]){
         res.status(400).json({
             success: false,
             error: true,
-            message: 'Leave group operation has failed'
+            message: response[1]
         });
+	return;     
      }
      res.status(200).json({
          success: true,
@@ -809,22 +845,45 @@ module.exports.ListGroups = async(req,res) => {
 };
 
 module.exports.InitiatePayment = async(req,res) => {
-  const { email, reference_number, group_id } = req.body;
+  const { email, reference_number, group_reference_number } = req.body;
   const errors = validationResult(req);
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
   }
 
   try{
-     const group = await groupById(group_id);
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+
+     const userDetail = await getUserDetailByReferenceNumber(reference_number);	  
+
+     const group = await groupByReferenceNumber(group_reference_number);
      if(!group[0]){
         res.status(404).json({
             success: false,
             error: true,
-            message: "Group not found"
+            message: group[1]
         });
         return;
      }
+	  
      if(!group[1].payment_required){
         res.status(404).json({
             success: false,
@@ -833,7 +892,8 @@ module.exports.InitiatePayment = async(req,res) => {
         });
         return;
      } 
-     const hasPaid = await groupPayment(email,reference_number,group_id) || await groupSubscription(email,reference_number,group_id);	  
+
+     const hasPaid = await groupPayment(email,reference_number,group[1].group_id) || await groupSubscription(email,reference_number,group[1].group_id);	  
      if(hasPaid){
         res.status(400).json({
             success: false,
@@ -846,10 +906,11 @@ module.exports.InitiatePayment = async(req,res) => {
      if(group[1].payment_type === 'subscription'){
         const customer = await stripeService.createCustomer(group[1]);
 	const subscription = await stripeService.createSubscription(customer.id,group[1].stripe_price_id,{ group_reference_number: group[1].group_reference_number, user_reference_id: reference_number }); 
-	//create subscription user record entry     
+	//-.create subscription.     
 	const payload = {
-           group_id,
-	   user_id,
+	   group_id: group[1].group_id,
+	   group_reference_number,	
+	   user_id: userDetail._id,
 	   user_email: email,
 	   user_reference_number: reference_number,
 	   stripe_subscription_id: subscription.id,
@@ -867,10 +928,11 @@ module.exports.InitiatePayment = async(req,res) => {
 	});     
      }else{
         paymmentIntent = await stripeService.createPaymentIntent(group[1].price_amount,group[1].price_currency,{ group_reference_number: group[1].group_reference_number, user_reference_id: reference_number });
-	//create payment user record entry
+	//-.create payment user.
         const payload = {
-	   group_id,
-	   user_id,
+	   group_id: group[1].group_id,
+           group_reference_number,		
+	   user_id: userDetail._id,
 	   user_email: email,
 	   user_reference_number: reference_number,
 	   payment_type: group[1].payment_type,

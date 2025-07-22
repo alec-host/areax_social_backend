@@ -552,7 +552,7 @@ const getLikeCommentValidator = [
 const userGroupMgmtValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
-    body('group_id', 'group_id must be provided').not().isEmpty(),
+    body('group_reference_number', 'group_reference_number must be provided').not().isEmpty(),
     body('member_reference_number', 'member_reference_number must be provided').not().isEmpty(),
 ];
 
@@ -574,7 +574,7 @@ const removeGroupValidator = [
     body('email', 'Email cannot be Empty').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Reference number must be provided').not().isEmpty(),	
-    param('group_id', 'group_id must be provided').not().isEmpty(),
+    body('group_reference_number', 'group_reference_number must be provided').not().isEmpty(),
 ];
 
 const getGroupsValidator = [
@@ -718,6 +718,13 @@ const getPaginationValidator = [
       .exists({ checkFalsy: true }).withMessage('limit must be provided')
       .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),
 ];
+
+const joinGroupValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('invite_link', 'Invite link number must be provided').not().isEmpty(),
+];
+
 /*
 const formDataValidator = [
     check('email', 'Email cannot be Empty').not().isEmpty(),
@@ -744,5 +751,5 @@ module.exports = {
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
     deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
     addSavedPostValidator,getSavedPostValidator,singlePaidGroupMgmtUploadValidator,
-    getGroupsValidator,getPaginationValidator	
+    getGroupsValidator,getPaginationValidator,joinGroupValidator	
 };

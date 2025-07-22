@@ -1,5 +1,3 @@
-const express = require('express');
-
 const friendController = require("../controllers/friends.controller");
 const wallController = require("../controllers/social.wall.controller");
 const likeController = require("../controllers/likes.controller");
@@ -24,8 +22,7 @@ const error = require('../middleware/error.handler');
 
 module.exports = (app) => {
 
-const router = express.Router();
-
+  const router = require("express").Router();
 /*
  *-email
  *-reference_number
@@ -345,7 +342,7 @@ const router = express.Router();
  *-file
  *
 */
-router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.singlePaidGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
+  router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.singlePaidGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
 /*
  *
  *-email
@@ -353,12 +350,12 @@ router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.sing
  *-invite_link
  *
 */
-  router.post('/groups/join',auth,inputValidator.singleGroupMgmtUploadValidator,groupChatController.JoinGroup);
+  router.post('/groups/join',auth,inputValidator.joinGroupValidator,groupChatController.JoinGroup);
 /*
  *
  *-email
  *-reference_number
- *-group_id
+ *-group_reference_number
  *-member_reference_number
  *
 */
@@ -367,7 +364,7 @@ router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.sing
  *
  *-email
  *-reference_number
- *-group_id
+ *-group_reference_number
  *
 */
   router.post('/groups/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
@@ -375,15 +372,15 @@ router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.sing
  *
  *-email
  *-reference_number
- *-group_id
+ *-group_reference_number
  *
 */
-  router.delete('/groups/:group_id',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
+  router.delete('/groups/:group_reference_number',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
 /*
  *
  *-email
  *-reference_number
- *-group_id
+ *-group_reference_number
  *-member_reference_number
  *
 */
@@ -547,10 +544,16 @@ router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.sing
  *-limit
  *
  * */
-  router.get('/report',basicAuth,inputValidator.getPaginationValidator,wallController.GetReportedSocialPost);	
+  router.get('/report',basicAuth,inputValidator.getPaginationValidator,wallController.GetReportedSocialPost);
 
-
-  app.use('/social/api/v1',router);	
+  router.get('/ping', (req, res) => res.send('pong'));	
+  
+  app.use('/social/api/v1',router);
+  app.use((req, res, next) => {
+     console.log(`🔍 Missed route: ${req.method} ${req.url}`);
+     next();
+  });
+	
   app.use(error.errorHandler);
-  app.use((req, res, next) => { res.status(404).json({ success: false, error: true, error: true, message: 'Endpoint not found or parameter missing' }); });
+  //app.use((req, res, next) => { res.status(404).json({ success: false, error: true, error: true, message: 'Endpoint not found or parameter missing' }); });
 };

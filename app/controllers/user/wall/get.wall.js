@@ -9,7 +9,8 @@ module.exports.getWallRecords = async (post_type,is_public='everyone',page=1,lim
     const records = await Wall.findAndCountAll({
       where: {
 	 post_type: post_type,
-	 is_public: is_public,
+	 group_reference_number: null,     
+	 is_public: is_public,     
 	 is_deleted: 0,      
       },
       limit: parseInt(limit),
