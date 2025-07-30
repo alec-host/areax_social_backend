@@ -11,7 +11,7 @@ const { deleteFriendRequest } = require("./user/friend/purge.friend.request");
 const { getUserProfilePrivacyStatus } = require("./user/get.user.profile.privacy.status");
 const { getUserEmailByReferenceNumber } = require("./user/get.user.email.by.reference.no");
 const { getFriendRequestByReferenceNumber } = require("./user/friend/get.friend.request.by.reference.no");
-const { filterJsonAttributes,filterJsonArrayAttributes } = require("../utils/filter.json.attributes");
+const { filterJsonAttributes,filterJsonArrayAttributes,filterUserAttributes } = require("../utils/filter.json.attributes");
 const { updateSingleFriendDetailsCache } = require("../sync-cache-service/sync.service");
 const { USER_PROFILE_ATTRIBUTE_FILTER } = require("../constants/app_constants");
 const { connectToRedis, closeRedisConnection, setCache, getCache, scanWildcardKeysPaginated } = require("../cache/redis");
@@ -43,9 +43,11 @@ module.exports.GetPotentialFriendList = async(req,res) => {
         return;
      }
      const client = await connectToRedis();
-     const users = await scanWildcardKeysPaginated(client,"user:*");
-     const excludedKeys = USER_PROFILE_ATTRIBUTE_FILTER;	
-     const filteredProfileData = filterJsonArrayAttributes(users,excludedKeys);	
+     const key = "user:*";
+     const users = await scanWildcardKeysPaginated(client,key);	  
+     const excludedKeys = USER_PROFILE_ATTRIBUTE_FILTER;
+     console.log('TTTTTTTTTTTTTTTTTTTTT ', excludedKeys);	  
+     const filteredProfileData = filterUserAttributes(users,excludedKeys);	
      res.status(200).json({ success: true, error: false, data: filteredProfileData, message: 'Matched friend list.' });
      await closeRedisConnection(client);
   }catch(e){

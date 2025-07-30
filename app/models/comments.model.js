@@ -58,6 +58,10 @@ module.exports = (sequelize, Sequelize) => {
   }, {
     indexes: [
         {
+            name: 'post_id_index',
+            fields: ['post_id'],
+        },	    
+        {
             name: 'commentor_reference_number_index',
             fields: ['commentor_reference_number'],
             using: 'BTREE',

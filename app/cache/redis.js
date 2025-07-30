@@ -51,6 +51,33 @@ const deleteCache = async (client,key) => {
     }
 };
 
+const scanWildcardKeysPaginated = async(client, pattern = '*', count = 20) => {
+  const decodedEntries = [];
+  let cursor = '0';
+
+  do {
+    const result = await client.scan(cursor, {
+      MATCH: pattern,
+      COUNT: count
+    });
+
+    cursor = result.cursor;
+   for (const key of result.keys) {
+      const rawValue = await client.get(key);
+      try {
+        const parsed = JSON.parse(rawValue);
+	const parsedValue = Array.isArray(parsed) ? parsed[0] : parsed;      
+        decodedEntries.push(parsedValue);
+      } catch (err) {
+        // fallback for non-JSON values
+        decodedEntries.push({ rawValue });
+      }
+    } 
+  } while (cursor !== '0');
+
+  return decodedEntries;
+};
+
 // New functions for social wall caching
 const generateSocialWallKey = (postType, isPublic, page, limit, email, referenceNumber) => {
     return `social_wall:${postType}:${isPublic}:${page}:${limit}:${email}:${referenceNumber}`;
@@ -103,6 +130,27 @@ const invalidateUserCache = async (client, email, referenceNumber) => {
     }
 };
 
+const invalidateGroupUserCache = async (client, email, referenceNumber) => {
+    const patterns = [
+        `social_wall:*:${email}:${referenceNumber}`,
+        `user_group_likes:${email}:${referenceNumber}`,
+        `user_group_saved:${email}:${referenceNumber}`,
+        `user_group_reported:${email}:${referenceNumber}`
+    ];
+
+    for (const pattern of patterns) {
+        try {
+            const keys = await client.keys(pattern);
+            if (keys.length > 0) {
+                await client.del(keys);
+                console.log(`Invalidated ${keys.length} cache keys for pattern: ${pattern}`);
+            }
+        } catch (error) {
+            console.error('Cache invalidation error:', error);
+        }
+    }
+};
+
 const invalidatePostCache = async (client, postId) => {
     const patterns = [
         'social_wall:*',
@@ -129,10 +177,12 @@ module.exports = {
     setCache,
     getCache,
     deleteCache,
+    scanWildcardKeysPaginated,	
     setSocialWallCache,
     getSocialWallCache,
     setUserDataCache,
     getUserDataCache,
     invalidateUserCache,
-    invalidatePostCache    	
+    invalidatePostCache,
+    invalidateGroupUserCache	
 };

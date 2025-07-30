@@ -36,6 +36,7 @@ db2.groups.payments = require("./group.payments")(sequelize2,Sequelize);
 db2.groups.subscriptions = require("./group.subscriptions")(sequelize2,Sequelize);
 
 db2.files = require("./file.model")(sequelize2,Sequelize);
+db2.wallpapers = require("./wallpaper.model")(sequelize2,Sequelize);
 db2.queued_friends_requests = require("./request.friend.model")(sequelize2,Sequelize);
 db2.report_post = require("./post.feedback.model")(sequelize2,Sequelize);
 db2.saved_posts = require("./saved.posts.model")(sequelize2,Sequelize);

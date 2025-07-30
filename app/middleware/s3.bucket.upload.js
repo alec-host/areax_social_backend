@@ -47,7 +47,7 @@ const s3Upload = multer({
 	      console.log(file);	
               const ext = path.extname(file.originalname);
               //const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
-	      const fileName = `test-${Date.now()}${ext}`;
+	      const fileName = `media-${Date.now()}${ext}`;
 	      console.log(fileName);	
               cb(null, fileName);  
 	   }catch(error){

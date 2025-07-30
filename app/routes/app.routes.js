@@ -10,6 +10,8 @@ const fileController = require("../controllers/file.controller");
 const flagController = require("../controllers/flag.controller");
 const reportController = require("../controllers/report.controller");
 const savedPostController = require("../controllers/saved.post.controller");
+const searchUserController = require("../controllers/search.user.controller");
+const wallpaperController = require("../controllers/wallpaper.controller");
 
 const inputValidator = require("../validation/common.validation");
 
@@ -398,6 +400,14 @@ module.exports = (app) => {
  *
  *-email
  *-reference_number
+ *-post_type
+ *
+*/
+  router.get('/group-content',inputValidator.getWallFeedValidator,wallController.GetGroupWallContent);
+/*
+ *
+ *-email
+ *-reference_number
  *-group_id
  *-message
  *-file
@@ -467,31 +477,6 @@ module.exports = (app) => {
  *
  *-email
  *-reference_number
- *-flag
- *-post_id
- *
- * */
-  router.patch('/toggle/like/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleLikeFlag);
-/*
- *
- *-email
- *-reference_number
- *-post_id
- *
- * */
-  router.patch('/toggle/save/:post_id',auth,inputValidator.togglFlagValidator,flagController.toggleSaveFlag);
-/*
- *
- *-email
- *-reference_number
- *-post_id
- *
- * */
-  router.patch('/toggle/report/:post_id',basicAuth,inputValidator.togglFlagValidator,flagController.toggleReportFlag);
-/*
- *
- *-email
- *-reference_number
  *-feedback
  *-post_id
  *
@@ -545,15 +530,30 @@ module.exports = (app) => {
  *
  * */
   router.get('/report',basicAuth,inputValidator.getPaginationValidator,wallController.GetReportedSocialPost);
+/*
+ *
+ *-email
+ *-reference_number
+ *-search_query
+ *
+ * */	
+  router.post('/search-user',auth,inputValidator.searchUserValidator,searchUserController.searchUserByUsername);
+
+  router.post('/wallpaper',basicAuth,s3UploadMiddleware,wallpaperController.saveMedia);
+  router.get('/wallpaper',auth,inputValidator.getWallpaperValidator,wallpaperController.fetchMedia);	
+  router.get('/wallpaper/admin',inputValidator.getWallpaperValidator,wallpaperController.fetchMedia);	
+  router.delete('/wallpaper/:media_id',basicAuth,inputValidator.wallpaperValidator,wallpaperController.deleteMedia);	
+  router.put('/wallpaper/:media_id',basicAuth,inputValidator.wallpaperValidator,s3UploadMiddleware,wallpaperController.modifyMedia);	
 
   router.get('/ping', (req, res) => res.send('pong'));	
   
   app.use('/social/api/v1',router);
+
   app.use((req, res, next) => {
      console.log(`🔍 Missed route: ${req.method} ${req.url}`);
+     res.status(404).json({ success: false, error: true, error: true, message: 'Endpoint not found or parameter missing' });	  
      next();
   });
-	
+
   app.use(error.errorHandler);
-  //app.use((req, res, next) => { res.status(404).json({ success: false, error: true, error: true, message: 'Endpoint not found or parameter missing' }); });
 };

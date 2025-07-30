@@ -77,6 +77,10 @@ module.exports = (sequelize, Sequelize) => {
     max_members: {
       type: DataTypes.INTEGER,
       allowNull: true
+    },
+    is_secret_group: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     },	  
     created_at: {
       type: DataTypes.DATE,

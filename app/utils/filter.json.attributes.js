@@ -15,4 +15,16 @@ const filterJsonArrayAttributes = (data, excludedKeys) => {
     }));
 };
 
-module.exports = { filterJsonAttributes,filterJsonArrayAttributes };
+function filterUserAttributes(dataArray, excludeKeys = []) {
+  return dataArray.map(user => {
+    const filteredUser = {};
+    for (const key in user) {
+      if (!excludeKeys.includes(key)) {
+        filteredUser[key] = user[key];
+      }
+    }
+    return filteredUser;
+  });
+}
+
+module.exports = { filterJsonAttributes,filterJsonArrayAttributes,filterUserAttributes };

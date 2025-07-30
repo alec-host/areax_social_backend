@@ -725,6 +725,25 @@ const joinGroupValidator = [
     body('invite_link', 'Invite link number must be provided').not().isEmpty(),
 ];
 
+const searchUserValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('search_query', 'Search query number must be provided').not().isEmpty(),
+];
+
+const wallpaperValidator = [
+    param('media_id', 'media_id must be provided').not().isEmpty()
+];
+
+const getWallpaperValidator = [
+    query('page')
+      .exists({ checkFalsy: true }).withMessage('page must be provided')
+      .isInt({ min: 1 }).withMessage('page must be an integer >= 1'),
+    query('limit')
+      .exists({ checkFalsy: true }).withMessage('limit must be provided')
+      .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),
+];
+
 /*
 const formDataValidator = [
     check('email', 'Email cannot be Empty').not().isEmpty(),
@@ -751,5 +770,6 @@ module.exports = {
     uploadS3Validator,getUploadedFilesValidator,getUploadedFileValidator,
     deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
     addSavedPostValidator,getSavedPostValidator,singlePaidGroupMgmtUploadValidator,
-    getGroupsValidator,getPaginationValidator,joinGroupValidator	
+    getGroupsValidator,getPaginationValidator,joinGroupValidator,
+    searchUserValidator,wallpaperValidator,getWallpaperValidator	
 };

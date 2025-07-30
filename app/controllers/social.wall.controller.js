@@ -3,6 +3,7 @@ const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 const { getWallRecords } = require("./user/wall/get.wall");
+const { getGroupWallRecords } = require("./user/wall/get.group.wall");
 const { getWallRecordsByReferenceNumber } = require("./user/wall/get.wall.by.reference.number");
 const { saveShowPost } = require("./user/wall/post.show.content");
 const { saveSocialPost } = require("./user/wall/post.social.content");
@@ -18,7 +19,7 @@ const { getUserReportedPosts } = require("./user/wall/get.user.reported.posts");
 const { getReportedPosts } = require("./user/wall/get.reported.posts");
 const { groupByReferenceNumber } = require("./user/group/group.by.id");
 
-const { connectToRedis, closeRedisConnection, setSocialWallCache, getSocialWallCache, setUserDataCache, getUserDataCache } = require("../cache/redis");
+const { connectToRedis, closeRedisConnection, setSocialWallCache, getSocialWallCache, setUserDataCache, getUserDataCache,invalidatePostCache, invalidateUserCache } = require("../cache/redis");
 
 const { SYSTEM_USER_EMAIL, SYSTEM_USER_REFERENCE_NUMBER } = require("../constants/app_constants");
 
@@ -179,6 +180,137 @@ module.exports.GetWallContent = async(req,res) => {
   }
 };
 
+module.exports.GetGroupWallContent = async(req,res) => {
+  let redisClient = null;
+  const errors = validationResult(req);
+  const { email, reference_number, post_type, page, limit } = req.query;
+  if(!errors.isEmpty()){
+     return res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+  try{
+     redisClient = await connectToRedis();
+
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+     const is_public = 'private';
+     const cachedData = await getSocialWallCache(
+        redisClient,
+        post_type,
+        is_public,
+        page,
+        limit,
+        email,
+        reference_number
+     );
+
+     if(cachedData){
+        console.log('Serving from cache');
+        return res.status(200).json({
+           success: true,
+           error: false,
+           data: cachedData.groupPosts,
+           pagination: cachedData.pagination,
+           message: "List of group post[s] (cached)."
+        });
+     }
+
+     // Try to get cached user data first
+     const [cachedLikes, cachedSaved, cachedReported] = await Promise.all([
+        getUserDataCache(redisClient, 'user_group_likes', email, reference_number),
+        getUserDataCache(redisClient, 'user_group_saved', email, reference_number),
+        getUserDataCache(redisClient, 'user_group_reported', email, reference_number)
+     ]);
+
+     // Fetch data from database
+     const [postResp, likeresp, savedPostResp, reportedPostResp] = await Promise.all([
+        getGroupWallRecords(post_type, is_public, page, limit),
+        cachedLikes ? Promise.resolve([true, cachedLikes]) : getUserLikes(email, reference_number),
+        cachedSaved ? Promise.resolve([true, cachedSaved]) : getUserSavedPosts(email, reference_number),
+        cachedReported ? Promise.resolve([true, cachedReported]) : getUserReportedPosts(email, reference_number)
+     ]);
+
+     if(!postResp[0]) {
+        return res.status(400).json({
+           success: false,
+           error: true,
+           message: "Error: fetching group post[s]."
+        });
+     }
+	  
+     const groupPosts = await likedSavedReportedPost(
+        postResp[1].data,
+        likeresp[1],
+        savedPostResp[1],
+        reportedPostResp[1]
+     );
+
+     const responseData = {
+        groupPosts,
+        pagination: {
+           total: parseInt(postResp[1].total),
+           current_page: parseInt(postResp[1].currentPage),
+           total_pages: parseInt(postResp[1].totalPages)
+        }
+     };
+
+     // Cache the response
+     await setSocialWallCache(
+        redisClient,
+        post_type,
+        is_public,
+        page,
+        limit,
+        email,
+        reference_number,
+        responseData
+     );
+
+     // Cache user-specific data
+     await Promise.all([
+        setUserDataCache(redisClient, 'user_group_likes', email, reference_number, likeresp[1]),
+        setUserDataCache(redisClient, 'user_group_saved', email, reference_number, savedPostResp[1]),
+        setUserDataCache(redisClient, 'user_group_reported', email, reference_number, reportedPostResp[1])
+     ]);
+
+     res.status(200).json({
+         success: true,
+         error: false,
+         data: groupPosts,
+         pagination: responseData.pagination,
+         message: "List of group post[s]."
+     });
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
+  }
+};
+
 module.exports.GetWallContentByReferenceNumber = async(req,res) => {
   const errors = validationResult(req);
   const { email, reference_number, post_type } = req.body;
@@ -233,6 +365,7 @@ module.exports.SaveShowContent = async(req,res) => {
   const errors = validationResult(req);
   const { email, reference_number, media_url, caption, item_amount, gps_coordinates, location_name, share_on_social_wall, is_buy_enabled, is_comment_allowed, is_minted_automatically } = req.body;
   const file = req.file ? req.file : null;	
+  let redisClient = null;	
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });	  
   }
@@ -287,6 +420,10 @@ module.exports.SaveShowContent = async(req,res) => {
          });
          return;
       }
+	 
+      redisClient = await connectToRedis();
+      await invalidatePostCache(redisClient,response[1]?.post_id);
+      await invalidateUserCache(redisClient,email,reference_number);
 	  
       res.status(200).json({
           success: true,
@@ -298,9 +435,13 @@ module.exports.SaveShowContent = async(req,res) => {
          res.status(500).json({
              success: false,
              error: true,
-              message: e?.response?.message || e?.message || 'Something wrong has happened'
+             message: e?.response?.message || e?.message || 'Something wrong has happened'
          });
       }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
   }
 };
 
@@ -308,6 +449,7 @@ module.exports.SaveSocialContent = async(req,res) => {
   const errors = validationResult(req);
   const { email, reference_number, media_url, gps_coordinates, caption, location_name, is_buy_enabled, is_comment_allowed, is_minted_automatically } = req.body;
   const file = req.file ? req.file : null;	
+  let redisClient = null;	
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });	  
   }
@@ -362,6 +504,11 @@ module.exports.SaveSocialContent = async(req,res) => {
          });
          return;
       }
+
+      redisClient = await connectToRedis();
+      await invalidatePostCache(redisClient,response[1]?.post_id);
+      await invalidateUserCache(redisClient,email,reference_number);
+      console.log(response[1]?.post_id);	  
       res.status(200).json({
           success: true,
           error: false,
@@ -375,6 +522,10 @@ module.exports.SaveSocialContent = async(req,res) => {
              message: e?.response?.message || e?.message || 'Something wrong has happened'
          });
       }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
   }
 };
 
@@ -382,9 +533,10 @@ module.exports.SaveGroupContent = async(req,res) => {
   const errors = validationResult(req);
   const { email, reference_number, group_reference_number, media_url, gps_coordinates, caption, location_name, is_buy_enabled, is_comment_allowed, is_minted_automatically } = req.body;
   const file = req.file ? req.file : null;
+  let redisClient = null;	
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
-  }
+  }	
   try{
       const email_found = await findUserCountByEmail(email);
       if(email_found === 0){
@@ -454,6 +606,11 @@ module.exports.SaveGroupContent = async(req,res) => {
          });
          return;
       }
+
+      redisClient = await connectToRedis();
+      await invalidatePostCache(redisClient,response[1]?.post_id);
+      await invalidateUserCache(redisClient,email,reference_number);
+
       res.status(200).json({
           success: true,
           error: false,
@@ -467,6 +624,10 @@ module.exports.SaveGroupContent = async(req,res) => {
              message: e?.response?.message || e?.message || 'Something wrong has happened'
          });
       }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
   }
 };
 
@@ -542,6 +703,7 @@ module.exports.SaveShareContent = async(req,res) => {
 module.exports.SaveSocialAIContent = async(req,res) => {
   const { media_url, caption, category } = req.body;
   const errors = validationResult(req);
+  let redisClient = null;	
   if(!errors.isEmpty()){
      return  res.status(422).json({ success: false, error: true, message: errors.array() });	   
   }
@@ -569,6 +731,11 @@ module.exports.SaveSocialAIContent = async(req,res) => {
          });
          return;
       }
+	
+      redisClient = await connectToRedis();
+      await invalidatePostCache(redisClient,response[1]?.post_id);
+      await invalidateUserCache(redisClient,email,reference_number);
+	  
       res.status(200).json({
           success: true,
           error: false,
@@ -582,6 +749,10 @@ module.exports.SaveSocialAIContent = async(req,res) => {
             message: e?.response?.message || e?.message || 'Something wrong has happened'
         });
      }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
   } 	
 };
 
@@ -589,6 +760,7 @@ module.exports.SaveShowOpenBidContent = async(req,res) => {
   const errors = validationResult(req);
   const { email, reference_number, media_url, caption, item_amount, gps_coordinates, share_on_social_wall } = req.body;
   const file = req.file ? req.file : null;	
+  let redisClient = null;	
   if(!errors.isEmpty()){
      return  res.status(422).json({ success: false, error: true, message: errors.array() }); 	  
   }
@@ -639,6 +811,11 @@ module.exports.SaveShowOpenBidContent = async(req,res) => {
          });
          return;
       }
+
+      redisClient = await connectToRedis();
+      await invalidatePostCache(redisClient,response[1]?.post_id);
+      await invalidateUserCache(redisClient,email,reference_number);
+	  
       res.status(200).json({
           success: true,
           error: false,
@@ -652,6 +829,10 @@ module.exports.SaveShowOpenBidContent = async(req,res) => {
              message: e?.response?.message || e?.message || 'Something wrong has happened'
          });
       }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
   }
 };
 
@@ -659,6 +840,7 @@ module.exports.SaveShowClosedBidContent = async(req,res) => {
   const errors = validationResult(req);
   const { email, reference_number, media_url, caption, item_amount, gps_coordinates, share_on_social_wall, close_time } = req.body;
   const file = req.file ? req.file : null;	
+  let redisClient = null;	
   if(!errors.isEmpty()){
      res.status(422).json({ success: false, error: true, message: errors.array() });	  
      return;	  
@@ -703,26 +885,32 @@ module.exports.SaveShowClosedBidContent = async(req,res) => {
            post_type: share_on_social_wall === 0 ? 'show-board' : 'cross-board',
 	   closed_time: new Date(bidCloseTime[1]),     
         };
+
         const response = await saveShowClosedBidPost(payload);
-        if(response[0]){
-           res.status(200).json({
-               success: true,
-               error: false,
-               message: "Content posted successfully."
-           });
-        }else{
+        if(!response[0]){
            res.status(400).json({
                success: false,
                error: true,
                message: response[1]
            });
-        }
+           return;		
+	}
+
+        redisClient = await connectToRedis();
+        await invalidatePostCache(redisClient,response[1]?.post_id);
+        await invalidateUserCache(redisClient,email,reference_number);
+		
+        res.status(200).json({
+            success: true,
+            error: false,
+            message: "Content posted successfully."
+        });
      }else{
-         res.status(400).json({
-             success: false,
-             error: true,
-             message: bidCloseTime[1]
-         });			     
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: bidCloseTime[1]
+        });			     
      }
   }catch(e){
       if(e){
@@ -732,6 +920,10 @@ module.exports.SaveShowClosedBidContent = async(req,res) => {
              message: e?.response?.message || e?.message || 'Something wrong has happened'
          });
       }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
   }
 };
 
@@ -740,6 +932,7 @@ module.exports.DeleteSocialPost = async(req,res) => {
   const { email, reference_number } = req.body;
   const { post_id } = req.params;	
   const file = req.file ? req.file : null;
+  let redisClient = null;	
   if(!errors.isEmpty()){
      res.status(422).json({ success: false, error: true, message: errors.array() });
      return;	  
@@ -772,6 +965,9 @@ module.exports.DeleteSocialPost = async(req,res) => {
          });
          return;
      }
+     redisClient = await connectToRedis();
+     await invalidatePostCache(redisClient,post_id);
+     await invalidateUserCache(redisClient,email,reference_number);	  
      res.status(200).json({ success: true, error: false, message: response[1] });
   }catch(e){
      if(e){
@@ -780,6 +976,10 @@ module.exports.DeleteSocialPost = async(req,res) => {
             error: true,
             message: e?.response?.message || e?.response?.data || e?.message || 'Something wrong has happened'
         });
+     }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
      }
   }  
 };

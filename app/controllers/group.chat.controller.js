@@ -31,7 +31,7 @@ const { uploadImageToCustomStorage } = require("../services/CUSTOM-STORAGE");
 
 module.exports.CreateOpenGroup = async(req,res) => {
   const errors = validationResult(req);
-  const { email, reference_number, group_name, group_caption,max_members } = req.body;
+  const { email, reference_number, group_name, group_caption, max_members } = req.body;
   const file = req.file ? req.file : null;
   if(!errors.isEmpty()){
      res.status(422).json({ success: false, error: true, message: errors.array() });
