@@ -55,6 +55,15 @@ module.exports = (sequelize, Sequelize) => {
              },
          }
       },
+      wallpaper_picture_url: {
+         type: DataTypes.STRING(2048),
+         allowNull: true,
+         validate: {
+             isUrl: {
+                msg: "Invalid URL format."
+             },
+         }
+      },	   
       tier_reference_number: {
          type: DataTypes.STRING(65),
          allowNull: true

@@ -18,6 +18,7 @@ const { getGroupChats } = require("./user/group/get.group.chats");
 const { sendMessage } = require("./user/group/group.messaging");
 const { removeUserFromGroup } = require("./user/group/remove.user.group");
 const { groupByReferenceNumber } = require("./user/group/group.reference.number.by.id");
+const { modifyGroupByReferenceNumber } = require("./user/group/modify.group.by.reference.number");
 const { groupPayment } = require("./user/group/group.payment");
 const { groupSubscription } = require("./user/group/group.subscription");
 const { groupPaymentStatus } = require("./user/group/group.payment.status");
@@ -103,9 +104,9 @@ module.exports.CreateOpenGroup = async(req,res) => {
 
 module.exports.CreatePaidGroup = async(req,res) => {
   const errors = validationResult(req);
-  const { email, reference_number, group_name, group_caption, max_members, price_amount, subscription_interval } = req.body;
+  const { email, reference_number, group_name, group_caption, max_members, is_secret_group, live_stream_support, event_support, buy_sell_support, gift_token_support } = req.body;
 
-  const file = req.file ? req.file : null;
+  const file = req.file ? req.file : null;	
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });
   }
@@ -144,12 +145,15 @@ module.exports.CreatePaidGroup = async(req,res) => {
         description: group_caption,
         group_type: 'exclusive',
         background_image: image_url,
-        payment_required: true,
+        payment_required: false,
         invite_link,
-        price_amount,
         price_currency: 'usd',
-        subscription_interval,
-        max_members
+        max_members,
+	is_secret_group,
+	live_stream_support, 
+	event_support, 
+	buy_sell_support, 
+	gift_token_support     
      };
      const response = await createGroup(payload);
      if(!response[0]){
@@ -165,7 +169,7 @@ module.exports.CreatePaidGroup = async(req,res) => {
          error: false,
          data: response[1],
          message: `Group with name: ${group_name} has been created`
-     });
+     });	  
   }catch(e){
      if(e){
         console.error(e);
@@ -959,4 +963,233 @@ module.exports.InitiatePayment = async(req,res) => {
         });
      }
   }
+};
+
+module.exports.AddGroupBackgroundImage = async(req,res) => {
+  const errors = validationResult(req);
+  const { email, reference_number, group_reference_number } = req.body;
+  const file = req.file ? req.file : null;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+     }
+     let image_url;
+     if(file){
+        image_url = await uploadImageToCustomStorage(file?.filename);
+     }else{
+        image_url = null;
+     }
+
+     const group = await groupByReferenceNumber(group_reference_number);
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: group[1]
+        });
+        return;
+     }	  
+	  
+     const admin = await isGroupAdmin(reference_number);
+     if(!admin[0]){
+        res.status(403).json({
+            success: false,
+            error: true,
+            message: "Unauthorized"
+        });
+        return;
+     }	  
+
+     const payload = {
+        background_image: image_url
+     };
+     const response = await modifyGroupByReferenceNumber(group_reference_number,payload); 
+     if(!response){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Failed to update background image",
+        });
+        return;
+     }
+     res.status(200).json({
+         success: true,
+         error: false,
+         message: `Group background image has been updated`
+     });
+  }catch(e){
+     if(e){
+        console.error(e);
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+   }
+};
+
+module.exports.AddGroupName = async(req,res) => {
+  const errors = validationResult(req);
+  const { email, reference_number, group_name, group_reference_number } = req.body;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+     }
+
+     const group = await groupByReferenceNumber(group_reference_number);
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: group[1]
+        });
+        return;
+     }
+
+     const admin = await isGroupAdmin(reference_number);
+     if(!admin[0]){
+        res.status(403).json({
+            success: false,
+            error: true,
+            message: "Unauthorized"
+        });
+        return;
+     }
+
+     const payload = {
+        group_name
+     };
+     const response = await modifyGroupByReferenceNumber(group_reference_number,payload);
+     if(!response){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Failed to update group name",
+        });
+        return;
+     }
+     res.status(200).json({
+         success: true,
+         error: false,
+         message: `Group name has been updated`
+     });
+  }catch(e){
+     if(e){
+        console.error(e);
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+   }
+};
+
+module.exports.AddGroupCaption = async(req,res) => {
+  const errors = validationResult(req);
+  const { email, reference_number, group_caption, group_reference_number } = req.body;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+     }
+
+     const group = await groupByReferenceNumber(group_reference_number);
+     if(!group[0]){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: group[1]
+        });
+        return;
+     }
+
+     const admin = await isGroupAdmin(reference_number);
+     if(!admin[0]){
+        res.status(403).json({
+            success: false,
+            error: true,
+            message: "Unauthorized"
+        });
+        return;
+     }
+
+     const payload = {
+	description: group_caption
+     };
+     const response = await modifyGroupByReferenceNumber(group_reference_number,payload);
+     if(!response){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: "Failed to update group caption",
+        });
+        return;
+     }
+     res.status(200).json({
+         success: true,
+         error: false,
+         message: `Group caption has been updated`
+     });
+  }catch(e){
+     if(e){
+        console.error(e);
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+   }
 };

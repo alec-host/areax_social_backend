@@ -1,5 +1,6 @@
 const path = require('path');
 const { body, query, check, param } = require("express-validator");
+const { withDefault } = require("../middleware/default.value.handler");
 
 const multiUploadValidator = [
     body('email', 'Missing: email must be checked').not().isEmpty(),
@@ -203,6 +204,7 @@ const socialWallURLValidator = [
 ];
 
 const singleGroupMgmtUploadValidator = [
+    withDefault('max_members',450),	
     body('email', 'Missing: email must be checked').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
@@ -212,12 +214,14 @@ const singleGroupMgmtUploadValidator = [
         .isLength({ max: 5250 })
         .withMessage('Missing: group_caption must not exceed 5250 characters.'),
     body('max_members')
+	.optional()
         .isInt({ min: 1, max: 1000 })
         .withMessage('max_members must be checked, has a value of between 1 to 1000.'),
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
-            return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+            //return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+            return next();
         }
         const validFormats = ['.mp4','.jpeg','.jpg','.png','.webp'];
         const ext = path.extname(req.file.originalname).toLowerCase();
@@ -230,6 +234,7 @@ const singleGroupMgmtUploadValidator = [
 ];
 
 const singlePaidGroupMgmtUploadValidator = [
+    withDefault('max_members',450),
     body('email', 'Missing: email must be checked').not().isEmpty(),
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
@@ -239,18 +244,37 @@ const singlePaidGroupMgmtUploadValidator = [
         .isLength({ max: 5250 })
         .withMessage('Missing: group_caption must not exceed 5250 characters.'),
     body('price_amount')
+	.optional()
         .isDecimal({ decimal_digits: '0,2' })
         .withMessage('Price amount must be a decimal number with up to 2 decimal places'),
     body('subscription_interval')
+       .optional()	
        .isIn(['monthly', 'yearly', 'weekly'])
        .withMessage('Subscription interval must be one of: monthly, yearly, weekly'),
     body('max_members')
+        .optional()	
         .isInt({ min: 1, max: 1000 })
         .withMessage('max_members must be checked, has a value of between 1 to 1000.'),
+    body("is_secret_group")
+	.isIn([0, 1])
+        .withMessage('is_secret_group must be checked, has a value of either 0 or 1.'),	
+    body("live_stream_support")
+        .isIn([0, 1])
+        .withMessage('live_stream_support must be checked, has a value of either 0 or 1.'),
+    body("event_support")
+        .isIn([0, 1])
+        .withMessage('event_support must be checked, has a value of either 0 or 1.'),
+    body("buy_sell_support")
+        .isIn([0, 1])
+        .withMessage('buy_sell_support must be checked, has a value of either 0 or 1.'),
+    body("gift_token_support")
+        .isIn([0, 1])
+        .withMessage('gift_token_support must be checked, has a value of either 0 or 1.'),	
     (req, res, next) => {
         if(!req.file){
             //throw new Error('No file uploaded');
-            return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+            //return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+            return next();
         }
         const validFormats = ['.mp4','.jpeg','.jpg','.png','.webp'];
         const ext = path.extname(req.file.originalname).toLowerCase();
@@ -267,7 +291,6 @@ const singleShowUploadValidator = [
     body('email', 'Invalid email').isEmail(),
     body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
     body('item_amount')
-        .optional()
         .isFloat({ gt: 0 })
         .withMessage('item_amount must be greater than 0 if provided.'),
     body('caption')
@@ -736,12 +759,59 @@ const wallpaperValidator = [
 ];
 
 const getWallpaperValidator = [
+    query('email', 'Email cannot be Empty').not().isEmpty(),
+    query('reference_number', 'Reference number must be provided').not().isEmpty(),	
     query('page')
       .exists({ checkFalsy: true }).withMessage('page must be provided')
       .isInt({ min: 1 }).withMessage('page must be an integer >= 1'),
     query('limit')
       .exists({ checkFalsy: true }).withMessage('limit must be provided')
       .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),
+];
+
+const getWallpaperAdminValidator = [
+    query('page')
+      .exists({ checkFalsy: true }).withMessage('page must be provided')
+      .isInt({ min: 1 }).withMessage('page must be an integer >= 1'),
+    query('limit')
+      .exists({ checkFalsy: true }).withMessage('limit must be provided')
+      .isInt({ min: 1, max: 100 }).withMessage('limit must be an integer between 1 and 100'),
+];
+
+const groupAddBackgroundImageValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('group_reference_number', 'group_reference_number must be provided').not().isEmpty(),	
+    (req, res, next) => {
+        if(!req.file){
+            //throw new Error('No file uploaded');
+            return res.status(400).json({ success: false, error: true, message: 'No files uploaded' });
+        }
+        const validFormats = ['.mp4','.jpeg','.jpg','.png','.webp'];
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        if(!validFormats.includes(ext)){
+            //throw new Error('Invalid file format. Only .jpeg,.webp are allowed.');
+            return res.status(400).json({ success: false, error: true, message: 'Invalid file format. Only MP4,JPEG,JPG,PNG,and WEBP are allowed.' });
+        }
+        next();
+    }
+];
+
+const groupAddNameValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('group_reference_number', 'group_reference_number must be provided').not().isEmpty(),
+    body('group_name', 'group_name must be provided').not().isEmpty(),	
+];
+
+const groupAddCaptionValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('group_reference_number', 'group_reference_number must be provided').not().isEmpty(),
+    body('group_caption', 'group_caption must be provided').not().isEmpty(),
 ];
 
 /*
@@ -771,5 +841,6 @@ module.exports = {
     deleteUploadedFileValidator,commentReplyValidator,getCommentReplyValidator,
     addSavedPostValidator,getSavedPostValidator,singlePaidGroupMgmtUploadValidator,
     getGroupsValidator,getPaginationValidator,joinGroupValidator,
-    searchUserValidator,wallpaperValidator,getWallpaperValidator	
+    searchUserValidator,wallpaperValidator,getWallpaperValidator,getWallpaperAdminValidator,
+    groupAddBackgroundImageValidator,groupAddNameValidator,groupAddCaptionValidator	
 };

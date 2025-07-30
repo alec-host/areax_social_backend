@@ -5,6 +5,7 @@ const Wallpaper = db2.wallpapers;
 module.exports.getPaginatedWallpaper = async (whereClause, limit, offset) => {
   try {
     const files = await Wallpaper.findAndCountAll({
+      attributes: ['media_id','original_name','file_name','file_url','file_size','mime_type','file_type','created_at'],	    
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),

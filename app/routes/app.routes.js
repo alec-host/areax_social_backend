@@ -328,7 +328,7 @@ module.exports = (app) => {
  *-group_name
  *-group_caption
  *-max_members
- *-file
+ *-file - optional
  *
 */
   router.post('/groups/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
@@ -341,10 +341,42 @@ module.exports = (app) => {
  *-price_amount
  *-subscription_interval
  *-max_members
- *-file
+ *-file - optional
+ *-is_secret_group
+ *-live_stream_support
+ *-event_support
+ *-buy_sell_support
+ *-gift_token_support
  *
 */
   router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.singlePaidGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-file
+ *
+*/	
+  router.put('/group/background-image',auth,fileHandler.uploadMiddleware,inputValidator.groupAddBackgroundImageValidator,groupChatController.AddGroupBackgroundImage);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-group_name
+ *
+*/
+  router.put('/group/name',auth,inputValidator.groupAddNameValidator,groupChatController.AddGroupName);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-group_caption
+ *
+*/
+  router.put('/group/caption',auth,inputValidator.groupAddCaptionValidator,groupChatController.AddGroupCaption);	
 /*
  *
  *-email
@@ -541,7 +573,7 @@ module.exports = (app) => {
 
   router.post('/wallpaper',basicAuth,s3UploadMiddleware,wallpaperController.saveMedia);
   router.get('/wallpaper',auth,inputValidator.getWallpaperValidator,wallpaperController.fetchMedia);	
-  router.get('/wallpaper/admin',inputValidator.getWallpaperValidator,wallpaperController.fetchMedia);	
+  router.get('/wallpaper/admin',inputValidator.getWallpaperAdminValidator,wallpaperController.fetchMedia);	
   router.delete('/wallpaper/:media_id',basicAuth,inputValidator.wallpaperValidator,wallpaperController.deleteMedia);	
   router.put('/wallpaper/:media_id',basicAuth,inputValidator.wallpaperValidator,s3UploadMiddleware,wallpaperController.modifyMedia);	
 

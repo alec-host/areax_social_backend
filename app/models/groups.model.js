@@ -81,6 +81,22 @@ module.exports = (sequelize, Sequelize) => {
     is_secret_group: {
       type: DataTypes.INTEGER,
       defaultValue: 0
+    },	
+    live_stream_support: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    event_support: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    buy_sell_support: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },	  
+    gift_token_support: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     },	  
     created_at: {
       type: DataTypes.DATE,

@@ -6,6 +6,8 @@ const { saveUploadedWallpaper } = require("./user/file-upload/create.wallpaper")
 const { getUploadedWallpaper } = require("./user/file-upload/get.wallpaper.by.id");
 const { getPaginatedWallpaper } = require("./user/file-upload/get.wallpapers");
 const { modifyUploadedWallpaper } = require("./user/file-upload/modify.wallpaper");
+const { findUserCountByEmail } = require("./user/find.user.count.by.email");
+const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 
 class WallpaperController {
 
@@ -187,13 +189,32 @@ class WallpaperController {
   async fetchMedia(req,res){
     try{
        const errors = validationResult(req);
-       const { page = 1, limit = 10 } = req.body;
+       const { email, reference_number, page = 1, limit = 10 } = req.query;
 
        if(!errors.isEmpty()){
           res.status(422).json({ success: false, error: true, message: errors.array() });
           return;
        }
-	 
+
+       const email_found = await findUserCountByEmail(email);
+       if(email_found === 0){
+          res.status(404).json({
+              success: false,
+              error: true,
+              message: "Email not found."
+          });
+          return;
+       }
+       const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+       if(reference_number_found === 0){
+          res.status(404).json({
+              success: false,
+              error: true,
+              message: "Reference number not found."
+          });
+          return;
+       }
+	    
        const offset = (page - 1) * limit;
        const whereClause = {};
 	    
