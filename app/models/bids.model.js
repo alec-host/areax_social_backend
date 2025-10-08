@@ -16,15 +16,15 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
     },	  
     reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
       allowNull: true	    
     },
     bidder_email: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
       allowNull: false
     },	  
     bidder_reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
       allowNull: false	    
     },
     bid_amount: {

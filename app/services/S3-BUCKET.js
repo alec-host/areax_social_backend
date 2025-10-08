@@ -1,8 +1,5 @@
 const { AWS_BUCKET_ACCESS_KEY_ID, AWS_BUCKET_SECRET_ACCESS_KEY, AWS_BUCKET_REGION } = require("../constants/app_constants");
 
-//const AWS = require('aws-sdk');
-console.log('TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT ',AWS_BUCKET_REGION);
-
 const { S3Client } = require('@aws-sdk/client-s3');
 //require('dotenv').config();
 const s3 = new S3Client({

@@ -1,18 +1,22 @@
 const filterJsonAttributes = (users, excludedKeys) => {	
-    return users.map(user => {
-        return Object.fromEntries(
-            Object.entries(user).filter(([key]) => !excludedKeys.includes(key))
-        );
-    });
+  if (!Array.isArray(users)) {
+    console.warn('Expected an array for "users", but got:', typeof users);
+    return [];
+  }	
+  return users?.map(user => {
+     return Object.fromEntries(
+        Object.entries(user).filter(([key]) => !excludedKeys.includes(key))
+     );
+  });
 };
 
 const filterJsonArrayAttributes = (data, excludedKeys) => {
-    return data.map(entry => ({
-        ...entry,
-        user: entry.user?.map(user =>
+  return data?.map(entry => ({
+     ...entry,
+     user: entry.user?.map(user =>
             Object.fromEntries(Object.entries(user).filter(([key]) => !excludedKeys.includes(key)))
-        ) || []
-    }));
+     ) || []
+  }));
 };
 
 function filterUserAttributes(dataArray, excludeKeys = []) {

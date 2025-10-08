@@ -34,6 +34,8 @@ db2.members = require("./group.members.model")(sequelize2,Sequelize);
 db2.messages = require("./group.messages.model")(sequelize2,Sequelize);
 db2.groups.payments = require("./group.payments")(sequelize2,Sequelize);
 db2.groups.subscriptions = require("./group.subscriptions")(sequelize2,Sequelize);
+db2.groups.invites = require("./group.invites.model")(sequelize2,Sequelize);
+db2.members.report = require("./group.report.member.model")(sequelize2,Sequelize);
 
 db2.files = require("./file.model")(sequelize2,Sequelize);
 db2.wallpapers = require("./wallpaper.model")(sequelize2,Sequelize);

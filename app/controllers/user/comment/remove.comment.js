@@ -4,6 +4,7 @@ const Comments = db2.comments;
 
 module.exports.removeComment = async (commentId) => {
   try {
+    /*	  
     const deletedRows = await Comments.update(
       { is_deleted: 1 },
       {
@@ -21,29 +22,26 @@ module.exports.removeComment = async (commentId) => {
       console.log(`No matching comment found with ID ${commentId}.`);
       return [false,'No matching comment found to delete.'];
     }
-  } catch (error) {
-    console.error('Error deleting comment:', error.message);
-    return [false, error.message];
-  }
-};
-/*
- *
-     const deletedRows = await Likes.destroy(
+    */
+    const deletedRows = await Comments.destroy(
       {
         where: {
-          like_id: likeData.like_id
+          comment_id: commentId,
+          is_deleted: 0,
         },
       }
     );
 
     if (deletedRows > 0) {
-      console.log(`Like with ID ${likeData.like_id} successfully deleted.`);
-      return [true,'Like deleted successfully.'];
+      console.log(`Comment with ID ${commentId} has been deleted.`);
+      return [true,'Comment deleted successfully.'];
     } else {
-      console.log(`No matching comment found with ID ${likeData.like_id}.`);
-      return [false,'No matching like found to delete.'];
+      console.log(`No matching comment found with ID ${commentId}.`);
+      return [false,'No matching comment found to delete.'];
     }
-
- *
- *
- * */
+	  
+  } catch (error) {
+    console.error('Error deleting comment:', error.message);
+    return [false, error.message];
+  }
+};

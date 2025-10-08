@@ -11,6 +11,7 @@ module.exports.saveShowPost = async(data) => {
       username: data.username,
       profile_image_url: data.profile_image_url,
       media_url: data.media_url,
+      type: data?.type,	    
       description: data.caption || '',	    
       location_name: data.location_name || null,	    
       item_amount: data.item_amount || 0.00,

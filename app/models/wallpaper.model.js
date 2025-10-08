@@ -14,15 +14,15 @@ const AreaXWallpaper = sequelize.define('AreaXWallpaper', {
 	allowNull: true   
     },	
     original_name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: false
     },
     file_name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: false
     },
     file_url: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false
     },
     file_size: {
@@ -30,7 +30,7 @@ const AreaXWallpaper = sequelize.define('AreaXWallpaper', {
         allowNull: false
     },
     mime_type: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(25),
         allowNull: false
     },
     file_type: {
@@ -41,8 +41,12 @@ const AreaXWallpaper = sequelize.define('AreaXWallpaper', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    category: {
+        type: DataTypes.STRING(45),
+        defaultValue: 'custom'
+    },	
     source: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(45),
         allowNull: true       
     },	
     created_at: {

@@ -40,6 +40,10 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.TEXT,
       allowNull: true // Only used for downvotes with user-provided feedback
     },
+    group_reference_number: {
+      type: DataTypes.STRING(75),
+      allowNull: true
+    },	  
     created_at: {
       type: DataTypes.DATE,
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
@@ -64,7 +68,12 @@ module.exports = (sequelize, Sequelize) => {
             name: 'is_processed_index',
             fields: ['is_processed'],
             using: 'BTREE',
-        },	     
+        },
+	{
+            name: 'group_reference_number_index',
+            fields: ['group_reference_number'],
+            using: 'BTREE',		
+	}
     ],	  
     tableName: 'tbl_areax_post_feedback',
     collate: 'utf8mb4_general_ci',

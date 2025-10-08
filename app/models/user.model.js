@@ -25,6 +25,10 @@ module.exports = (sequelize, Sequelize) => {
          type: DataTypes.STRING(20),
          allowNull: true
       },
+      country_code: {
+         type: DataTypes.STRING(5),
+         allowNull: true
+      },	   
       username: {
           type: DataTypes.STRING(255),
           allowNull: true
@@ -83,7 +87,7 @@ module.exports = (sequelize, Sequelize) => {
       token_id: DataTypes.STRING(70),
       hashed_token_id: DataTypes.STRING(70),
       privacy_status: {
-        type: DataTypes.ENUM("public", "friends_only", "anonymous"),
+        type: DataTypes.ENUM("public", "private", "anonymous"),
         defaultValue: "public",
         allowNull: false
       },
@@ -116,7 +120,7 @@ module.exports = (sequelize, Sequelize) => {
          indexes: [{
             name: 'idx_areax_users',
             unique: false,
-            fields : ['reference_number','phone','email','privacy_status','email_verified','phone_verified','is_online','is_deleted']
+            fields : ['reference_number','phone','country_code','email','privacy_status','email_verified','phone_verified','is_online','is_deleted']
         }],
          // Define table options
          timestamps: false,

@@ -12,7 +12,9 @@ module.exports.saveUploadedWallpaper = async (data) => {
       mime_type: data.mime_type,
       file_type: data.file_type,
       s3_key: data.s3_key,
-      source: data.source,	    
+      source: data.source,
+      category: data.category,	    
+      reference_number: data.reference_number || null,	    
       created_at: data.created_at || new Date()
     });
 

@@ -22,8 +22,12 @@ const updateSingleFriendDetailsCache = async(email) => {
     }
 };
 
-Friends.afterUpdate(async (user) => await updateSingleFriendDetailsCache(user[0].email));
-Friends.afterCreate(async (user) => await updateSingleFriendDetailsCache(user[0].email));
+Friends.afterUpdate(async (user) => {
+   await updateSingleFriendDetailsCache(user?.email)
+});
+Friends.afterCreate(async (user) => {
+   await updateSingleFriendDetailsCache(user?.email);
+});
 Friends.afterDestroy(async (user) => {
     const client = await connectToRedis();
     await deleteCache(client,`myfriend:${user[0].email}`);

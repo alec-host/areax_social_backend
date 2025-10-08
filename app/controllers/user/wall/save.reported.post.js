@@ -15,7 +15,8 @@ module.exports.saveReportedPost = async (data) => {
       description: data.description,	    
       post_id: data.post_id,
       vote_type: data.vote_type,
-      feedback: data.feedback,	    
+      feedback: data.feedback,	 
+      group_reference_number: data.group_reference_number || null,
       created_at: data.created_at || new Date(),
     })
 

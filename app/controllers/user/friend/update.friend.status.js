@@ -8,8 +8,8 @@ module.exports.acceptFriend = async(payload) => {
 	 {status:payload.status},
 	 {
 	    where: {
-                reference_number: payload.reference_number,
-		friend_reference_number: payload.friend_reference_number,
+                reference_number: payload.friend_reference_number,
+		friend_reference_number: payload.reference_number,
 		status: 'pending',
 	    }, 
 	 }

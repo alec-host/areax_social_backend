@@ -35,23 +35,31 @@ module.exports = (app) => {
  *-email
  *-reference_number
  *-friend_reference_number
+ *-connection_type
  *
  * */
-  router.post('/friend-request',auth,inputValidator.friendOpValidator,friendController.MakeFriendRequest);
+  router.post('/connection-request',auth,inputValidator.connectionRequestValidator,friendController.MakeConnectionRequest);
 /*
  *
  *-email
  *-reference_number
- *
+ *-type
 */
-  router.get('/friend-request',auth,inputValidator.getUserDetailsValidator,friendController.GetFriendRequest);
+  router.get('/connection-request',auth,inputValidator.getPendingConnectionValidator,friendController.GetConnectionRequest);
 /*
  *-email
  *-reference_number
  *-friend_reference_number
  *
  * */
-  router.post('/friend-request/accept',auth,inputValidator.acceptFriendValidator,friendController.AcceptFriend);
+  router.post('/connection-request/accept',auth,inputValidator.acceptFriendValidator,friendController.AcceptConnection);
+/*
+ *-email
+ *-reference_number
+ *-initiator_reference_number
+ *
+ * */
+  router.delete('/connection-request/remove',auth,inputValidator.removeConnectionValidator,friendController.RemoveConnection);	
 /*
  *-email
  *-reference_number
@@ -79,13 +87,22 @@ module.exports = (app) => {
  *-post_type
  *
  * */
-  router.get('/social-content'/*,auth*/,inputValidator.getWallFeedValidator,wallController.GetWallContent);
+  router.get('/social-content',auth,inputValidator.getUserDetailsValidator,wallController.GetWallContent);
+/*
+ *-email
+ *-reference_number
+ *-target_reference_number
+ *-post_type
+ *
+ * */
+  router.get('/social-content/profile',auth,inputValidator.getProfileWallFeedValidator,wallController.GetWallContentByReferenceNumber);	
 /*
  *
  *-email
  *-reference_number
  *-file
  *-caption
+ *-location_name
  *-gps_coordinates
  *-type
  *-is_buy_enabled
@@ -94,6 +111,22 @@ module.exports = (app) => {
  *
  * */
   router.post('/social-content',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialWallUploadValidator,wallController.SaveSocialContent);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-file
+ *-caption
+ *-gps_coordinates
+ *-type
+ *-is_public
+ *-is_buy_enabled
+ *-is_comment_allowed
+ *-is_minted_automatically
+ *
+ * */
+  router.post('/social-group-content',auth,fileHandler.uploadMiddleware,inputValidator.singleSocialWallGroupUploadValidator,wallController.SaveGroupContent);	
 /*
  *
  *-email
@@ -108,6 +141,22 @@ module.exports = (app) => {
  *
  * */
   router.post('/social-content/url',auth,inputValidator.socialWallURLValidator,wallController.SaveSocialContent);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-media_url
+ *-caption
+ *-gps_coordinates
+ *-type
+ *-is_public
+ *-is_buy_enabled
+ *-is_comment_allowed
+ *-is_minted_automatically
+ *
+ * */
+  router.post('/social-group-content/url',auth,inputValidator.groupWallURLValidator,wallController.SaveGroupContent);	
 /*
  *
  *-email
@@ -191,7 +240,7 @@ module.exports = (app) => {
  *-post_id
  *
  * */
-  router.get('/like'/*,auth*/,inputValidator.getLikeCommentValidator,likeController.GetUserLikes);
+  router.get('/like',auth,inputValidator.getLikeCommentValidator,likeController.GetUserLikes);
 /*
  *-email
  *-reference_number
@@ -208,6 +257,16 @@ module.exports = (app) => {
  *
  * */
   router.post('/comment',auth,inputValidator.addCommentValidator,commentController.AddComment);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-post_id
+ *-comment
+ *
+ * */
+  router.post('/group/comment',auth,inputValidator.addCommentValidator,commentController.AddGroupComment);	
 /*
  *
  *-email
@@ -331,7 +390,32 @@ module.exports = (app) => {
  *-file - optional
  *
 */
-  router.post('/groups/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
+  router.post('/group/open',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupMgmtUploadValidator,groupChatController.CreateOpenGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_name
+ *-group_caption
+ *-max_members
+ *-is_private
+ *-event_support
+ *-live_stream_support
+ *-buy_sell_support
+ *-gift_token_support
+ *-is_secret_group
+ *-file - optional
+ *
+*/
+  router.post('/group/private',auth,fileHandler.uploadMiddleware,inputValidator.singlePrivateGroupMgmtUploadValidator,groupChatController.CreatePrivateGroup);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *
+*/
+  router.get('/group/member-status',auth,inputValidator.getGroupDetailsValidator,groupChatController.GroupMembershipStatus);	
 /*
  *
  *-email
@@ -349,7 +433,7 @@ module.exports = (app) => {
  *-gift_token_support
  *
 */
-  router.post('/groups/paid',auth,fileHandler.uploadMiddleware,inputValidator.singlePaidGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
+  router.post('/group/paid',auth,fileHandler.uploadMiddleware,inputValidator.singlePaidGroupMgmtUploadValidator,groupChatController.CreatePaidGroup);
 /*
  *
  *-email
@@ -373,6 +457,15 @@ module.exports = (app) => {
  *-email
  *-reference_number
  *-group_reference_number
+ *-member_reference_number
+ *-role [admin,member]
+*/
+  router.put('/group/role',auth,inputValidator.groupSwitchRoleValidator,groupChatController.ChangeUserRoleGroup);	
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
  *-group_caption
  *
 */
@@ -381,10 +474,26 @@ module.exports = (app) => {
  *
  *-email
  *-reference_number
- *-invite_link
+ *-invite_code
  *
 */
-  router.post('/groups/join',auth,inputValidator.joinGroupValidator,groupChatController.JoinGroup);
+  router.post('/group-open/join',auth,inputValidator.joinGroupValidator,groupChatController.JoinOpenGroupWithGroupInviteLink);
+/*
+ *
+ *-email
+ *-reference_number
+ *-invite_code
+ *
+*/
+  router.post('/group-private/join',auth,inputValidator.joinGroupValidator,groupChatController.JoinPrivateGroupWithDynamicInviteLink);	
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *
+*/
+  router.post('/group/join/send-request',auth,inputValidator.removeGroupValidator,groupChatController.SendJoinGroupRequest);
 /*
  *
  *-email
@@ -393,7 +502,7 @@ module.exports = (app) => {
  *-member_reference_number
  *
 */
-  router.post('/groups/remove-user',auth,inputValidator.userGroupMgmtValidator,groupChatController.RemoveUserFromGroup);
+  router.post('/group/remove-user',auth,inputValidator.userGroupMgmtValidator,groupChatController.RemoveUserFromGroup);
 /*
  *
  *-email
@@ -401,7 +510,7 @@ module.exports = (app) => {
  *-group_reference_number
  *
 */
-  router.post('/groups/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
+  router.post('/group/leave',auth,inputValidator.removeGroupValidator,groupChatController.LeaveGroup)
 /*
  *
  *-email
@@ -409,16 +518,16 @@ module.exports = (app) => {
  *-group_reference_number
  *
 */
-  router.delete('/groups/:group_reference_number',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
+  router.delete('/group/:group_reference_number',auth,inputValidator.removeGroupValidator,groupChatController.DeleteGroup);
 /*
  *
  *-email
  *-reference_number
  *-group_reference_number
- *-member_reference_number
+ *-[member_reference_numbers]
  *
 */
-  router.post('/groups/user',auth,inputValidator.userGroupMgmtValidator,groupChatController.AddUserToGroup);
+  router.post('/group/users',auth,inputValidator.addMultipleUserserValidator,groupChatController.AddMultipleUsersToGroup);
 /*
  *
  *-email
@@ -427,7 +536,7 @@ module.exports = (app) => {
  *-limit
  *
 */
-  router.get('/groups',auth,inputValidator.getGroupsValidator,groupChatController.ListGroups);
+  router.get('/group',auth,inputValidator.getGroupsValidator,groupChatController.ListGroups);
 /*
  *
  *-email
@@ -435,27 +544,26 @@ module.exports = (app) => {
  *-post_type
  *
 */
-  router.get('/group-content',inputValidator.getWallFeedValidator,wallController.GetGroupWallContent);
+  router.get('/group/content',auth,inputValidator.getWallFeedValidator,wallController.GetGroupWallContent);
 /*
  *
  *-email
  *-reference_number
- *-group_id
- *-message
- *-file
+ *-group_reference_number
+ *-member_reference_number
+ *-reason (optional)
  *
 */
-//router.post('/group/message',auth,fileHandler.uploadMiddleware,inputValidator.singleGroupChatUploadValidator,groupChatController.SendGroupChatMessage);
+  router.post('/group/user/mute',auth,inputValidator.groupMuteUserValidator,groupChatController.MuteUserInGroup);
 /*
  *
  *-email
  *-reference_number
- *-group_id
- *-message
- *-media_url
+ *-group_reference_number
+ *-member_reference_number
  *
 */
-//router.post('/group/message/url',auth,inputValidator.groupChatMediaURLValidator,groupChatController.SendGroupChatMessage);
+  router.delete('/group/user/mute',auth,inputValidator.groupMuteUserValidator,groupChatController.UnmuteUserInGroup);	
 /*
  *
  *-email
@@ -513,7 +621,17 @@ module.exports = (app) => {
  *-post_id
  *
  * */
-  router.post('/report'/*,auth*/,inputValidator.reportedPostValidator,reportController.reportedPost);
+  router.post('/report',auth,inputValidator.reportedPostValidator,reportController.reportedSocialPost);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-feedback
+ *-post_id
+ *
+ * */
+  router.post('/group/report',auth,inputValidator.reportedGroupPostValidator,reportController.reportedGroupPost);	
 /*
  *
  *-email
@@ -539,7 +657,7 @@ module.exports = (app) => {
  *-post_id
  *
  * */
-  router.post('/save',/*auth,*/inputValidator.addSavedPostValidator,savedPostController.addSavedPost);
+  router.post('/save',auth,inputValidator.addSavedPostValidator,savedPostController.addSavedPost);
 /*
  *
  *-email
@@ -547,14 +665,14 @@ module.exports = (app) => {
  *-post_id
  *
  * */
-  router.delete('/save/:post_id',/*auth,*/inputValidator.deletePostValidator,savedPostController.removeSavedPost);
+  router.delete('/save/:post_id',auth,inputValidator.deletePostValidator,savedPostController.removeSavedPost);
 /*
  *
  *-email
  *-reference_number
  *
  * */
-  router.get('/save',/*auth,*/inputValidator.getSavedPostValidator,savedPostController.getSavedPost);
+  router.get('/save',auth,inputValidator.getSavedPostValidator,savedPostController.getSavedPost);
 /*
  *
  *-page
@@ -566,16 +684,172 @@ module.exports = (app) => {
  *
  *-email
  *-reference_number
+ *-group_reference_number
+ *-page
+ *-limit
+ *
+ * */
+  router.get('/group/report',auth,inputValidator.getGroupPaginationValidator,wallController.GetReportedGroupPost);
+/*
+ *
+ *-email
+ *-reference_number
  *-search_query
  *
  * */	
   router.post('/search-user',auth,inputValidator.searchUserValidator,searchUserController.searchUserByUsername);
+/*
+ *
+ *-email
+ *-reference_number
+ *-target_reference_number
+ *
+ * */
+  router.get('/profile/stats',auth,inputValidator.targetUserProfileMetricsValidator,wallController.SocialProfileMetrics);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *
+ * */
+  router.get('/group/stats',auth,inputValidator.getGroupDetailsValidator,groupChatController.GroupActivityMetrics);	
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-target_reference_number
+ *
+ * */
+  router.get('/group/user/stats',auth,inputValidator.targetUserGroupMetricsValidator,groupChatController.UserGroupActivityMetrics);
+/*
+ *
+ *-email
+ *-reference_number
+ *-target_reference_number
+ *-page
+ *-limit
+ *
+ * */
+  router.get('/connection/user-follow',auth,inputValidator.connectionUserListValidator,friendController.ConnectionFollowList);
+/*
+ *
+ *-email
+ *-reference_number
+ *-target_reference_number
+ *-page
+ *-limit
+ *
+ * */
+  router.get('/connection/user-following',auth,inputValidator.connectionUserListValidator,friendController.ConnectionFollowingList);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-page
+ *-limit
+ *
+ * */
+  router.get('/group/members',auth,inputValidator.getGroupPaginationValidator,groupChatController.GroupMembershipList);
+/*
+ *
+ *-email
+ *-reference_number
+ *-page
+ *-limit
+ *
+ * */
+  router.get('/group/invites',auth,inputValidator.getUserDetailsValidator,groupChatController.GroupUserInvites);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-page
+ *-limit
+ *
+ * */
+  router.get('/group/admin/invites',auth,inputValidator.getGroupPaginationValidator,groupChatController.GroupAdminInvites);	
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-recipient_reference_number
+ *-is_approved
+ *
+ * */
+  router.post('/group/admin/invites-approval',auth,inputValidator.groupInviteApprovalValidator,groupChatController.GroupAdminApproveRejectInviteRequest);	
+/*
+ *
+ *-email
+ *-reference_number
+ *-picture_url
+ *
+ * */
+  router.patch('/group/member/profile-picture',auth,inputValidator.changeGroupMemberPictureValidator,groupChatController.ChangeGroupMemberProfilePicture);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *
+*/
+  router.post('/group/invites/reject',auth,inputValidator.removeGroupValidator,groupChatController.RejectGroupInvite);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *
+*/
+  router.post('/group/members-import',auth,inputValidator.joinGroupValidator,groupChatController.ImportGroupMembersAsInvites);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-member_reference_number
+ *-reason
+ *
+*/
+  router.post('/group/report-user',auth,inputValidator.groupMuteUserValidator,groupChatController.ReportUser);
+/*
+ *
+ *-email
+ *-reference_number
+ *-group_reference_number
+ *-page
+ *-limit
+ *
+*/
+  router.get('/group/report-user',auth,inputValidator.getGroupPaginationValidator,groupChatController.AdminReportedUserList);
+/*
+ *
+ *-email
+ *-reference_number
+ *-review_status
+ *-report_id
+ *
+*/
+  router.post('/group/review/report-user',auth,inputValidator.reviewReportedUserValidator,groupChatController.ReviewReportedGroupMembers);
 
-  router.post('/wallpaper',basicAuth,s3UploadMiddleware,wallpaperController.saveMedia);
+/*
+ modlule.exports.ReviewReportedGroupMembers = async(req,res) => {
+  const { email, reference_number, reviewer_reference_number, report_id } = req.body;
+
+ **/	
+
+  //email, reference_number, group_reference_number, target_reference_number, reason	
+  router.post('/wallpaper/google',auth,inputValidator.googleWallpaperValidator,wallpaperController.saveGoogleNearbyMedia);
+  router.post('/wallpaper/custom',auth,s3UploadMiddleware,inputValidator.uploadS3Validator,wallpaperController.saveUserMedia);	
+  router.post('/wallpaper',basicAuth,s3UploadMiddleware,inputValidator.postWallpaperValidator,wallpaperController.saveMedia);
   router.get('/wallpaper',auth,inputValidator.getWallpaperValidator,wallpaperController.fetchMedia);	
-  router.get('/wallpaper/admin',inputValidator.getWallpaperAdminValidator,wallpaperController.fetchMedia);	
+  router.get('/wallpaper/admin',inputValidator.getWallpaperAdminValidator,wallpaperController.fetchMediaAdmin);	
   router.delete('/wallpaper/:media_id',basicAuth,inputValidator.wallpaperValidator,wallpaperController.deleteMedia);	
-  router.put('/wallpaper/:media_id',basicAuth,inputValidator.wallpaperValidator,s3UploadMiddleware,wallpaperController.modifyMedia);	
+  router.put('/wallpaper/:media_id',basicAuth,inputValidator.wallpaperValidator,s3UploadMiddleware,wallpaperController.modifyMedia);
 
   router.get('/ping', (req, res) => res.send('pong'));	
   

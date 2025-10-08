@@ -10,7 +10,7 @@ module.exports = (sequelize, Sequelize)=> {
     post_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      unique: true,	    
+      unique: 'post_id_key',	    
     },
     total_likes: {
       type: DataTypes.INTEGER,

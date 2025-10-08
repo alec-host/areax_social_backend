@@ -11,6 +11,9 @@ const { getUserLikes } = require("./user/like/get.user.likes");
 const { getPostCountById } = require("./user/wall/post.exist");
 const { likeIdExist } = require("./user/wall/like.exist");
 const { getPostByLikeId } = require("./user/like/get.post.by.like.id");
+const { getPostById } = require("./user/wall/get.post.by.post.id");
+const { sendInAppNotification } = require("../services/IN-APP-NOTIFICATION");
+
 const { connectToRedis, closeRedisConnection, invalidateUserCache, invalidatePostCache } = require("../cache/redis");
 
 module.exports.AddLike = async(req,res) => {
@@ -57,20 +60,37 @@ module.exports.AddLike = async(req,res) => {
             message: `Post with id ${post_id} not found.`
         });
         return;
-     }	  
+     }
+
+     const [ok, postData] = await getPostById(post_id);	  
+
      const payload = {
 	 user_id: userDetail._id,    
 	 email,
 	 reference_number,
 	 post_id    
      };
-     const hasLike = await likeExist(payload);	
+     const hasLike = await likeExist(payload);
      if(hasLike[0] && hasLike[1] === 0){	
 	const response = await addLike(payload);
 	if(response[0]){	
 	   redisClient = await connectToRedis();
 	   await invalidatePostCache(redisClient,post_id);	
            await invalidateUserCache(redisClient,email,reference_number);		
+
+           if(email !== postData.email){
+              const title = "Like";
+              const message = "Someone liked your post.";
+              const payload = {
+                 title: title,
+                 message: message,
+                 image_url: null,
+                 users: [postData.email],
+                 notification_for: "2"
+              };
+              //-send a notification.
+              await sendInAppNotification(payload);
+           }		
            res.status(200).json({
                success: true,
                error: false,
@@ -88,7 +108,7 @@ module.exports.AddLike = async(req,res) => {
         res.status(400).json({
             success: false,
             error: true,
-            message: "No allowed. You already have posted a like."
+            message: "Not allowed. You already have posted a like."
         });
      }
   }catch(e){

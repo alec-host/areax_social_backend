@@ -11,7 +11,7 @@ module.exports = (sequelize, Sequelize) => {
     group_reference_number: {
       type: DataTypes.STRING,
       defaultValue: () => `GRP_${uuidv4()}`,
-      unique: true,
+      unique: 'group_reference_number_index_u',
       allowNull: false
     },	  
     admin_id: {
@@ -40,7 +40,7 @@ module.exports = (sequelize, Sequelize) => {
     },
     // New payment-related fields
     group_type: {
-      type: DataTypes.ENUM('open', 'exclusive'),
+      type: DataTypes.ENUM('open','private','exclusive'),
       defaultValue: 'open',
       allowNull: false
     },
@@ -78,6 +78,10 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: true
     },
+    is_private: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },    	  
     is_secret_group: {
       type: DataTypes.INTEGER,
       defaultValue: 0
@@ -100,8 +104,12 @@ module.exports = (sequelize, Sequelize) => {
     },	  
     created_at: {
       type: DataTypes.DATE,
-      defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+      defaultValue: DataTypes.NOW
     },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
+    },	  
     is_deleted: {
       type: DataTypes.INTEGER,
       defaultValue: 0
@@ -144,7 +152,9 @@ module.exports = (sequelize, Sequelize) => {
         }	    
     ],
     tableName: 'tbl_areax_groups',
-    timestamps: false,
+    timestamps: true,
+    createdAt: 'created_at', // maps Sequelize's createdAt to your field
+    updatedAt: 'updated_at',  // maps Sequelize's updatedAt to your field	  
     collate: 'utf8mb4_general_ci',
     engine: 'InnoDB',	  
   });

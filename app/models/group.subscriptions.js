@@ -31,7 +31,7 @@ module.exports = (sequelize, Sequelize) => {
     stripe_subscription_id: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      unique: true
+      unique: 'stripe_subscription_id_index'
     },
     status: {
       type: DataTypes.ENUM('active', 'canceled', 'past_due', 'unpaid'),

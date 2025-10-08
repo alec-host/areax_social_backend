@@ -10,7 +10,7 @@ module.exports.groupByReferenceNumber = async(group_reference_number) => {
     }
     return [true, group];
   } catch (error) {
-    console.error('Error adding user to group:', error.message);
+    console.error('Error getting a group:', error.message);
     return [false, error.message];
   }
 };

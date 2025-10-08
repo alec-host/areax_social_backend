@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-console.log(process.env.DATABASE_NAME);
 module.exports = {
     APP_SERVER_PORT: process.env.APP_SERVER_PORT,
     DATABASE_NAME: process.env.DATABASE_NAME,
@@ -36,5 +35,7 @@ module.exports = {
     STRIPE_API_URL: process.envSTRIPE_API_URL,
     STRIPE_ACCOUNT: process.envSTRIPE_ACCOUNT,
     STRIPE_REDIRECT_URL: process.envSTRIPE_REDIRECT_URL,
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET	
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    DEVOPS_MAP_KEY: process.env.DEVOPS_MAP_KEY,
+    GOOGLE_PLACE_KEY: process.env.GOOGLE_PLACE_KEY	
 };

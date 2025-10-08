@@ -103,7 +103,7 @@ module.exports = (sequelize, Sequelize) => {
       defaultValue: 1	    
     },	  
     is_public: {
-      type: DataTypes.ENUM('everyone','friends'),
+      type: DataTypes.ENUM('everyone','private','inner-circle'),
       defaultValue: 'everyone'
     },	  
     is_deleted: {

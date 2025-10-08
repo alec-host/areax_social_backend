@@ -13,6 +13,7 @@ module.exports.addComment = async (commentData) => {
       commentor_profile_url_image: commentData.commentor_profile_url_image,
       commentor_username: commentData.commentor_username || null,	    
       comment_text: commentData.comment_text,
+      group_reference_number: commentData.group_reference_number || null,	    
       created_at: new Date(),	    
       is_edited: 0, // Default value
       is_deleted: 0, // Default value

@@ -12,29 +12,29 @@ module.exports = (sequelize,Sequelize) => {
       allowNull: false,
     },
     email: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
       allowNull: false,
     },	  
     reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
     },
     friend_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
     friend_reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
     },
     friend_name: {
       type: DataTypes.STRING(105),
       allowNull: true	    
     },	
     friend_caption: {
-      type: DataTypes.STRING(160),
+      type: DataTypes.TEXT('medium'),
       allowNull: true
     },
     friend_profile_picture_url: {
-      type: DataTypes.STRING(2048),
+      type: DataTypes.TEXT,
       allowNull: true,
       validate: {
          isUrl: {
@@ -43,8 +43,8 @@ module.exports = (sequelize,Sequelize) => {
       }
     },	  
     friend_category: {
-      type: DataTypes.STRING(50),
-      allowNull: true
+      type: DataTypes.ENUM('inner-circle','follow'),
+      allowNull: true	    
     },	  
     status: {
       type: DataTypes.ENUM('pending', 'accepted', 'blocked', 'unfriended'),
@@ -80,7 +80,12 @@ module.exports = (sequelize,Sequelize) => {
             name: 'friend_category_index',
             fields: ['friend_category'],
             using: 'BTREE',
-	},  
+	}, 
+        {
+            unique: true,
+            fields: ['user_id', 'reference_number', 'friend_id', 'friend_reference_number'],
+            name: 'user_ref_friend_unique'
+        },  
     ],	  
     tableName: 'tbl_areax_friends',
     timestamps: false,

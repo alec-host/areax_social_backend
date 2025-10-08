@@ -83,6 +83,11 @@ const generateSocialWallKey = (postType, isPublic, page, limit, email, reference
     return `social_wall:${postType}:${isPublic}:${page}:${limit}:${email}:${referenceNumber}`;
 };
 
+// 
+const generateGroupSocialWallKey = (postType, isPublic, group_reference_number, page, limit, email, referenceNumber) => {
+    return `group_social_wall:${postType}:${isPublic}:${group_reference_number}:${page}:${limit}:${email}:${referenceNumber}`;
+};
+
 const generateUserDataKey = (type, email, referenceNumber) => {
     return `${type}:${email}:${referenceNumber}`;
 };
@@ -95,6 +100,17 @@ const setSocialWallCache = async (client, postType, isPublic, page, limit, email
 
 const getSocialWallCache = async (client, postType, isPublic, page, limit, email, referenceNumber) => {
     const key = generateSocialWallKey(postType, isPublic, page, limit, email, referenceNumber);
+    return await getCache(client, key);
+};
+
+const setGroupSocialWallCache = async (client, postType, isPublic, group_reference_number, page, limit, email, referenceNumber, data) => {
+    const key = generateGroupSocialWallKey(postType, isPublic, group_reference_number, page, limit, email, referenceNumber);
+    await setCache(client, key, data, 1800); // 30 minutes TTL
+    return key;
+};
+
+const getGroupSocialWallCache = async (client, postType, isPublic, group_reference_number, page, limit, email, referenceNumber) => {
+    const key = generateGroupSocialWallKey(postType, isPublic, group_reference_number, page, limit, email, referenceNumber);
     return await getCache(client, key);
 };
 
@@ -132,7 +148,7 @@ const invalidateUserCache = async (client, email, referenceNumber) => {
 
 const invalidateGroupUserCache = async (client, email, referenceNumber) => {
     const patterns = [
-        `social_wall:*:${email}:${referenceNumber}`,
+        `group_social_wall:*:${email}:${referenceNumber}`,
         `user_group_likes:${email}:${referenceNumber}`,
         `user_group_saved:${email}:${referenceNumber}`,
         `user_group_reported:${email}:${referenceNumber}`
@@ -171,6 +187,26 @@ const invalidatePostCache = async (client, postId) => {
     }
 };
 
+const invalidateGroupPostCache = async (client, postId) => {
+    const patterns = [
+        'group_social_wall:*',
+        `post_group_likes:${postId}:*`,
+        `post_group_comments:${postId}:*`
+    ];
+
+    for (const pattern of patterns) {
+        try {
+            const keys = await client.keys(pattern);
+            if (keys.length > 0) {
+                await client.del(keys);
+                console.log(`Invalidated ${keys.length} cache keys for pattern: ${pattern}`);
+            }
+        } catch (error) {
+            console.error('Cache invalidation error:', error);
+        }
+    }
+};
+
 module.exports = { 
     connectToRedis, 
     closeRedisConnection,
@@ -180,9 +216,12 @@ module.exports = {
     scanWildcardKeysPaginated,	
     setSocialWallCache,
     getSocialWallCache,
+    setGroupSocialWallCache, 
+    getGroupSocialWallCache,
     setUserDataCache,
     getUserDataCache,
     invalidateUserCache,
     invalidatePostCache,
-    invalidateGroupUserCache	
+    invalidateGroupUserCache,
+    invalidateGroupPostCache	
 };

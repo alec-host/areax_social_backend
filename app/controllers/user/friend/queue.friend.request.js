@@ -3,7 +3,7 @@ const { Sequelize } = require("sequelize");
 
 const FriendRequests = db2.queued_friends_requests;
 
-module.exports.queueFriendRequest = async(friendRequestData) => {
+module.exports.queueConnectionRequest = async(friendRequestData) => {
   try {
     const queueFriendRequest = await FriendRequests.create({
         reference_number: friendRequestData.reference_number,
@@ -14,7 +14,7 @@ module.exports.queueFriendRequest = async(friendRequestData) => {
         created_at: new Date().toISOString()
     });
 
-    return [true,'Friend request queued.'];
+    return [true,'Connection request queued.'];
   } catch (error) {
     console.error('Error queue friend request:', error.message);
     return [false,`Error queue friend request: ${error.message}`];

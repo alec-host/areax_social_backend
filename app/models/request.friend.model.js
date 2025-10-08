@@ -8,21 +8,21 @@ module.exports = (sequelize,Sequelize) => {
       primaryKey: true,
     },
     reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
     },
     originator_reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(105),
     },
     originator_name: {
       type: DataTypes.STRING(105),
       allowNull: true
     },
     originator_caption: {
-      type: DataTypes.STRING(160),
+      type: DataTypes.TEXT,	    
       allowNull: true
     },
     originator_profile_picture_url: {
-      type: DataTypes.STRING(2048),
+      type: DataTypes.TEXT,
       allowNull: true,
       validate: {
          isUrl: {

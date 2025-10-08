@@ -22,8 +22,9 @@ module.exports.saveSocialPost = async (data) => {
       reference_number: data.reference_number || null,
       username: data.username,
       profile_image_url: data.profile_image_url,	    
-      location_name: data.location_name,
+      location_name: data.location_name || null,
       media_url: data.media_url,
+      type: data.type,	    
       description: data.caption || '',
       item_amount: 0.00,
       post_type: data.post_type || 'social-board',
@@ -36,7 +37,7 @@ module.exports.saveSocialPost = async (data) => {
       is_buy_enabled: data.is_buy_enabled,
       is_comment_allowed: data.is_comment_allowed,	    
       is_minted_automatically: data.is_minted_automatically,	    
-      is_public: 1,	    
+      is_public: data.is_public || 'everyone',	    
       is_deleted: 0,
     });
 

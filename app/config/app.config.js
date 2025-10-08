@@ -26,12 +26,12 @@ const limiter = rateLimit({
 
 app.use("/social/api/v1", limiter);
 
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '50kb' }));
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
 app.use(morgan('tiny'));
 
-db2.sequelize.sync()
+db2.sequelize.sync({  alter: true })
   .then(() => {
    console.log("Synced db.");
 })

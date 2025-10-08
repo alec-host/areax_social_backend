@@ -43,6 +43,7 @@ module.exports = (sequelize, Sequelize) => {
       	type: DataTypes.STRING(240),
       	allowNull: false,
     },
+    group_reference_number: { type: DataTypes.STRING(75), allowNull: true },	  
     created_at: {
       	type: DataTypes.DATE,
     	defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),

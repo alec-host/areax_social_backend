@@ -2,7 +2,7 @@ const { db2 } = require("../../../models");
 
 const Wall = db2.wall;
 
-module.exports.getWallRecords = async (post_type,is_public='everyone',page=1,limit=100) => {	
+module.exports.getWallRecords = async (post_type,is_public='everyone',page=1,limit=10000000000000000) => {	
   if(page<=0){page=1;}	
   const offset = (page - 1) * limit;
   try {
@@ -12,10 +12,11 @@ module.exports.getWallRecords = async (post_type,is_public='everyone',page=1,lim
 	 group_reference_number: null,     
 	 is_public: is_public,     
 	 is_deleted: 0,      
-      },
+      },	    
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['created_at', 'DESC']],
+      raw: true	    
     });
 
     return [true,{

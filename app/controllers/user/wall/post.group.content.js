@@ -2,7 +2,7 @@ const { db2 } = require("../../../models");
 
 const Wall = db2.wall;
 
-module.exports.saveSocialPost = async (data) => {
+module.exports.saveGroupPost = async (data) => {
   try{
     if(data.post_type !== 'group-board'){
      // return [false,"Invalid post_type. Only 'social-board' or 'social-ai-board' posts can be saved using this method."];
@@ -19,8 +19,9 @@ module.exports.saveSocialPost = async (data) => {
       username: data.username,
       group_reference_number: data.group_reference_number,	    
       profile_image_url: data.profile_image_url,
-      location_name: data.location_name,
+      location_name: data.location_name || null,
       media_url: data.media_url,
+      type: data.type,	    
       description: data.caption || '',
       item_amount: 0.00,
       post_type: data.post_type || 'group-board',
@@ -32,7 +33,7 @@ module.exports.saveSocialPost = async (data) => {
       is_buy_enabled: data.is_buy_enabled,
       is_comment_allowed: data.is_comment_allowed,
       is_minted_automatically: data.is_minted_automatically,
-      is_public: 0,
+      is_public: data.is_public || 'private',
       is_deleted: 0,
     });
 
