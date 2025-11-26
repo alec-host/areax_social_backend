@@ -44,6 +44,7 @@ module.exports.likedSavedReportedPost = async(posts,likes,savedPosts,reportedPos
       bid_close_time: post.bid_close_time,
       category: post.category,
       type: post.type,
+      collection_reference_number: post.collection_reference_number,	   
       created_at: post.created_at,
       is_liked: likedPostIds.has(post.post_id), 
       is_saved: savedPostIds.has(post.post_id),

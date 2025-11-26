@@ -3,6 +3,7 @@ const { validationResult } = require("express-validator");
 const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 const { filterJsonAttributes } = require("../utils/filter.json.attributes");
+const { connectToRedis, closeRedisConnection, deleteCache } = require("../cache/redis");
 
 const { BASIC_CORE_AUTH_USERNAME,BASIC_CORE_AUTH_PASSWORD,PRIVACY_STATUS_ENDPOINT } = require("../constants/app_constants");
 
@@ -45,18 +46,23 @@ module.exports.ChangeProfileStatus = async(req,res) => {
            privacy_status: privacy_status
         };
         try{
+           const client = await connectToRedis();		
            const response = await axios.post(url, JSON.stringify(data), {
               auth: auth,
               headers: { "Content-Type": "application/json" }
            });
+           const key = `user:${email}`;		
            const excludedKeys = ["tier_reference_number","email_verified","phone_verified","created_at"];
 	   const filteredProfileData = filterJsonAttributes((response.data.data),excludedKeys);
+           await deleteCache(client,key);		
+           await closeRedisConnection(client);		
            res.status(200).json({
                success: true,
                error: false,
                data: filteredProfileData,	   
                message: "Profile privacy status has been updated."
            }); 
+           		
         }catch(error){  
            console.error(error.message);
            res.status(error.response.status).json({

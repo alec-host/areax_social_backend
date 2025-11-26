@@ -43,7 +43,9 @@ async function getUserActivityMetrics(viewerRef,profileOwnerRef,username = null,
       pendingOutCount,
       pendingInCount,
       acceptedOutCount,
-      acceptedInCount
+      acceptedInCount,
+      followOwnerCount,
+      followingOwnerCount	    
     ] = await Promise.all([
       // Posts by profile owner
       Wall.count({
@@ -101,7 +103,21 @@ async function getUserActivityMetrics(viewerRef,profileOwnerRef,username = null,
           friend_reference_number: viewerRef,
           status: 'accepted'
         }
-      })
+      }),
+      Friends.count({
+        where: {
+          reference_number: profileOwnerRef,
+          friend_category: 'follow',
+          status: 'accepted'
+        }
+      }),
+      Friends.count({
+        where: {
+          //reference_number: profileOwnerRef,
+          friend_reference_number: profileOwnerRef,
+          status: 'accepted'
+        }
+      }),	    
     ])
 
     // 3) Derive boolean flags
@@ -162,8 +178,9 @@ async function getUserActivityMetrics(viewerRef,profileOwnerRef,username = null,
       connection_status:           connectionStatus,
       profile_status:              profileStatus,
       friend_category_counts: {
-        follow:       followCount,
-        following:    acceptedIn  ? 1 : 0,
+	follow:       viewerRef === profileOwnerRef ? followOwnerCount : followCount,
+        //following:    acceptedIn ? 1 : 0,
+	following:    acceptedIn ? 1 : (viewerRef === profileOwnerRef ? followingOwnerCount : 0),
         inner_circle: innerCircleCount
       }
     }

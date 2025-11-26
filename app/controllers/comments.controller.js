@@ -13,7 +13,9 @@ const { getCommentRepliesByCommentId } = require("./user/comment/get.comment.rep
 const { getPostCountById } = require("./user/wall/post.exist");
 const { getCommentCountById } = require("./user/comment/comment.exist");
 const { getPostById } = require("./user/wall/get.post.by.post.id");
+const { onCreateWeePointPost } = require("../services/WEE-POINT");
 const { sendInAppNotification } = require("../services/IN-APP-NOTIFICATION");
+
 const { connectToRedis, closeRedisConnection, invalidateUserCache, invalidatePostCache } = require("../cache/redis");
 
 module.exports.AddComment = async(req,res) => {
@@ -69,8 +71,7 @@ module.exports.AddComment = async(req,res) => {
        if(response[0]){
           redisClient = await connectToRedis();
           await invalidatePostCache(redisClient,post_id);
-          await invalidateUserCache(redisClient,email,reference_number);
-          
+          await invalidateUserCache(redisClient,email,reference_number); 
           if(email !== postData.email){
 	     const title = "Comment";
 	     const message = "Someone commented on your post.";     
@@ -79,12 +80,15 @@ module.exports.AddComment = async(req,res) => {
                 message: message,
                 image_url: null,
                 users: [postData.email],
-                notification_for: "2"
+                notification_for: "GENERAL"
              };
              //-send a notification.
              await sendInAppNotification(payload);
 	  }
-		  
+	  
+          //-.reward: wee-point
+          await onCreateWeePointPost(email,'social_interaction');	       
+	       
           res.status(201).json({
               success: true,
               error: false,

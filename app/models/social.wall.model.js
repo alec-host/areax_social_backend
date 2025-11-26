@@ -16,13 +16,13 @@ module.exports = (sequelize, Sequelize) => {
          allowNull: true
     },	  
     reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(165),
     },
     username: {
       type: DataTypes.STRING(65),
     },
     group_reference_number: {
-      type: DataTypes.STRING(65),
+      type: DataTypes.STRING(165),
       allowNull: true	    
     },	  
     profile_image_url: {
@@ -70,6 +70,10 @@ module.exports = (sequelize, Sequelize) => {
       type: DataTypes.ENUM('image','video','other'),
       defaultValue: 'other',	    
       allowNull: false
+    },	
+    collection_reference_number: {
+      type: DataTypes.STRING(105),
+      allowNull: true
     },	  
     created_at: {
       type: DataTypes.DATE,

@@ -1,5 +1,7 @@
+const { Op } = require('sequelize');
 const { db2 } = require("../../../models");
 
+const Wall = db2.wall;
 const SavedPosts = db2.saved_posts;
 
 module.exports.removeSavedPost = async (data) => {
@@ -13,8 +15,9 @@ module.exports.removeSavedPost = async (data) => {
         },
       }
     );
-
+    const where = { post_id: data.post_id, collection_reference_number: { [Op.ne]: null } };
     if(deletedRows > 0){
+       const [updatedCount] = await Wall.update({ collection_reference_number: null },{ where });	    
        console.log(`Post with ID ${data.post_id} successfully deleted.`);
        return [true,'Post has been removed successfully.'];
     }else{

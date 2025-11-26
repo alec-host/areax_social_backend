@@ -12,6 +12,7 @@ const { getPostCountById } = require("./user/wall/post.exist");
 const { likeIdExist } = require("./user/wall/like.exist");
 const { getPostByLikeId } = require("./user/like/get.post.by.like.id");
 const { getPostById } = require("./user/wall/get.post.by.post.id");
+const { onCreateWeePointPost } = require("../services/WEE-POINT");
 const { sendInAppNotification } = require("../services/IN-APP-NOTIFICATION");
 
 const { connectToRedis, closeRedisConnection, invalidateUserCache, invalidatePostCache } = require("../cache/redis");
@@ -86,11 +87,14 @@ module.exports.AddLike = async(req,res) => {
                  message: message,
                  image_url: null,
                  users: [postData.email],
-                 notification_for: "2"
+                 notification_for: "GENERAL"
               };
               //-send a notification.
               await sendInAppNotification(payload);
            }		
+	
+           await onCreateWeePointPost(email,'social_interaction');
+
            res.status(200).json({
                success: true,
                error: false,

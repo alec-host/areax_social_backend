@@ -45,7 +45,7 @@ async function getConnectionFollowList(userReferenceNumber, page = 1, limit = 10
       },
       pagination: { page, limit },		  
     };
-
+   
     if(isEmptyConnectionList(connectionList.user_categories)) {
        return [false, 'not_found'];
     }

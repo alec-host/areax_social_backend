@@ -3,6 +3,8 @@ const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 const { getWallRecords } = require("./user/wall/get.wall");
+const { getWallHashtagRecords } = require("./user/wall/get.wall.hashtag");
+const { getSavedWallRecords } = require("./user/wall/get.wall.saved");
 const { getGroupWallRecords } = require("./user/wall/get.group.wall");
 const { getWallRecordsByReferenceNumber } = require("./user/wall/get.wall.by.reference.number");
 const { saveShowPost } = require("./user/wall/post.show.content");
@@ -23,18 +25,22 @@ const { groupByReferenceNumber } = require("./user/group/group.by.reference.no")
 const { findGroupUserMemberShipCount } = require("./user/group/group.user.membership");
 const { isUserMuted } = require("./user/group/group.user.is.muted");
 const { getUserActivityMetrics } = require("../utils/user.post.follow.metrics");
+const { filterSavedByReference } = require("../utils/filter.is.saved.post");
+const { onCreateWeePointPost } = require("../services/WEE-POINT");
 
 const { connectToRedis, closeRedisConnection, setSocialWallCache, 
-	getSocialWallCache, setGroupSocialWallCache, getGroupSocialWallCache, 
+	getSocialWallCache, setGroupSocialWallCache, getGroupSocialWallCache,
+	setSavedSocialWallCache, getSavedSocialWallCache,
 	setUserDataCache, getUserDataCache,invalidatePostCache, 
-	invalidateUserCache, invalidateGroupUserCache, invalidateGroupPostCache } = require("../cache/redis");
+	invalidateUserCache, invalidateGroupUserCache, invalidateGroupPostCache,invalidateSavedPostCache,
+        setSavedSocialWallCollectionCache,getSavedSocialWallCollectionCache,invalidateSavedPostCollectionCache } = require("../cache/redis");
 
 const { SYSTEM_USER_EMAIL, SYSTEM_USER_REFERENCE_NUMBER } = require("../constants/app_constants");
 
 module.exports.GetWallContent = async(req,res) => {
   let redisClient = null;	
   const errors = validationResult(req);
-  const { email, reference_number, post_type, page, limit } = req.query;
+  const { email, reference_number, post_type, hashtag, cursor, page, limit } = req.query;
   if(!errors.isEmpty()){
      return res.status(422).json({ success: false, error: true, message: errors.array() });	  
   }
@@ -60,6 +66,7 @@ module.exports.GetWallContent = async(req,res) => {
         });	     
 	return;     
      }
+
      const is_public = 'everyone';
      const cachedData = await getSocialWallCache(
         redisClient, 
@@ -70,14 +77,14 @@ module.exports.GetWallContent = async(req,res) => {
         email, 
         reference_number
      );
-
-     if(cachedData){
-        console.log('Serving from cache');
+     
+     if(cachedData && cachedData.socialPosts.length > 0 && !hashtag){ 
         return res.status(200).json({
            success: true,
            error: false,
            data: cachedData.socialPosts,
            pagination: cachedData.pagination,
+	   infinite_scroll: cachedData.infinite_scroll,
            message: "List of social wall post[s] (cached)."
         });
      }
@@ -88,10 +95,12 @@ module.exports.GetWallContent = async(req,res) => {
         getUserDataCache(redisClient, 'user_saved', email, reference_number),
         getUserDataCache(redisClient, 'user_reported', email, reference_number)
      ]);	
-
+     let mCursor=null;
+     if(cursor){mCursor=cursor};	  
      // Fetch data from database
      const [postResp, likeresp, savedPostResp, reportedPostResp] = await Promise.all([
-        getWallRecords(post_type, is_public, page, limit),
+        //getWallRecords(post_type, is_public, page, limit),
+	!hashtag ? getWallRecords(post_type, is_public, mCursor, page, limit) : getWallHashtagRecords(post_type, hashtag ,is_public, mCursor, page, limit),
         cachedLikes ? Promise.resolve([true, cachedLikes]) : getUserLikes(email, reference_number),
         cachedSaved ? Promise.resolve([true, cachedSaved]) : getUserSavedPosts(email, reference_number),
         cachedReported ? Promise.resolve([true, cachedReported]) : getUserReportedPosts(email, reference_number)
@@ -144,7 +153,11 @@ module.exports.GetWallContent = async(req,res) => {
            total: parseInt(postResp[1].total),
            current_page: parseInt(postResp[1].currentPage),
            total_pages: parseInt(postResp[1].totalPages)
-        }
+        },
+	infinite_scroll: {
+          next_cursor: postResp[1].nextCursor,
+          has_more: postResp[1].hasMore		
+	}    
      };    
         
      // Cache the response
@@ -171,7 +184,8 @@ module.exports.GetWallContent = async(req,res) => {
          error: false,
          data: socialPosts,
          pagination: responseData.pagination,
-         message: "List of social wall post[s]."
+	 infinite_scroll: responseData.infinite_scroll,    
+         message: !hashtag ? "List of social wall post[s]." : `List of social wall post[s] filtered using hashtag #${hashtag}.` 
      });	  
   }catch(e){
      if(e){
@@ -228,18 +242,6 @@ module.exports.GetGroupWallContent = async(req,res) => {
         return;
      }
 
-     /*	  
-     const admin = await isGroupAdmin(reference_number);
-     if(!admin[0]){
-        res.status(403).json({
-            success: false,
-            error: true,
-            message: "Unauthorized"
-        });
-        return;
-     }	  
-     */
-
      const is_public = 'private';
      const cachedData = await getGroupSocialWallCache(
         redisClient,
@@ -252,7 +254,7 @@ module.exports.GetGroupWallContent = async(req,res) => {
         reference_number
      );
 
-     if(cachedData){
+     if(cachedData && cachedData.groupPosts.length > 0){
         console.log('Serving from cache');
         return res.status(200).json({
            success: true,
@@ -326,8 +328,173 @@ module.exports.GetGroupWallContent = async(req,res) => {
          success: true,
          error: false,
          data: groupPosts,
-         pagination: responseData.pagination,
+         pagination: responseData.pagination,    
          message: "List of group post[s]."
+     });
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || 'Something wrong has happened'
+        });
+     }
+  }finally{
+     if(redisClient) {
+        await closeRedisConnection(redisClient);
+     }
+  }
+};
+
+module.exports.GetSavedWallContent = async(req,res) => {
+  let redisClient = null;
+  const errors = validationResult(req);
+  const { email, reference_number, post_type, collection_reference_number=null, hashtag, cursor, page, limit } = req.query;
+  if(!errors.isEmpty()){
+     return res.status(422).json({ success: false, error: true, message: errors.array() });
+  }
+  try{
+     redisClient = await connectToRedis();
+
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+	  
+     const is_public = 'everyone';
+     const cachedData = collection_reference_number ?
+     await getSavedSocialWallCollectionCache(
+        redisClient,
+        post_type,
+        is_public,
+        page,
+        limit,
+        email,
+        reference_number
+     )
+     :		  
+     await getSavedSocialWallCache(
+        redisClient,
+        post_type,
+        is_public,
+        page,
+        limit,
+        email,
+        reference_number
+     );
+	  
+     if(cachedData && cachedData.data?.length > 0){
+        return res.status(200).json({
+           success: true,
+           error: false,
+           data: cachedData.data,
+           pagination: cachedData.pagination,
+           infinite_scroll: cachedData.infinite_scroll,
+           message: "List of saved social wall post[s] (cached)."
+        });
+     }
+
+     // Try to get cached user data first
+     const [cachedLikes, cachedSaved, cachedReported] = await Promise.all([
+        getUserDataCache(redisClient, 'user_likes', email, reference_number),
+        getUserDataCache(redisClient, 'user_saved', email, reference_number),
+        getUserDataCache(redisClient, 'user_reported', email, reference_number)
+     ]);
+
+     let mCursor=null;
+     if(cursor){mCursor=cursor};
+     // Fetch data from database
+     const [postResp, likeresp, savedPostResp, reportedPostResp] = await Promise.all([
+        getSavedWallRecords(post_type, reference_number, hashtag, collection_reference_number, is_public, mCursor, page, limit),
+        //!hashtag ? getWallRecords(post_type, is_public, mCursor, page, limit) : getWallHashtagRecords(post_type, hashtag ,is_public, mCursor, page, limit),
+        cachedLikes ? Promise.resolve([true, cachedLikes]) : getUserLikes(email, reference_number),
+        cachedSaved ? Promise.resolve([true, cachedSaved]) : getUserSavedPosts(email, reference_number),
+        cachedReported ? Promise.resolve([true, cachedReported]) : getUserReportedPosts(email, reference_number)
+     ]);
+
+     if(!postResp[0]) {
+        return res.status(400).json({
+           success: false,
+           error: true,
+           message: "Error: fetching saved social wall post[s]."
+        });
+     }
+
+     const savedSocialPosts = await likedSavedReportedPost(
+        postResp[1].data,
+        likeresp[1],
+        savedPostResp[1],
+        reportedPostResp[1]
+     );
+     
+     const filteredSavedSocialPosts = filterSavedByReference(savedSocialPosts,reference_number,parseInt(postResp[1].currentPage));	  
+     
+     const responseData = {
+	savedSocialPosts: filteredSavedSocialPosts,
+     };
+     
+     if(responseData && responseData.savedSocialPosts.data?.length === 0){
+        return res.status(404).json({
+           success: false,
+           error: true,
+           message: "No saved social wall post."
+        });
+     }
+
+     // Cache the response
+     collection_reference_number ?
+     await setSavedSocialWallCollectionCache(
+        redisClient,
+        post_type,
+        is_public,
+        page,
+        limit,
+        email,
+        reference_number,
+        responseData.savedSocialPosts
+     )
+     :	  
+     await setSavedSocialWallCache(
+        redisClient,
+        post_type,
+        is_public,
+        page,
+        limit,
+        email,
+        reference_number,
+        responseData.savedSocialPosts
+     );
+      //setSavedSocialWallCache = async (client, postType, isPublic, page, limit, email, referenceNumber, data) 	  
+
+     // Cache user-specific data
+     await Promise.all([
+        setUserDataCache(redisClient, 'user_likes', email, reference_number, likeresp[1]),
+        setUserDataCache(redisClient, 'user_saved', email, reference_number, savedPostResp[1]),
+        setUserDataCache(redisClient, 'user_reported', email, reference_number, reportedPostResp[1])
+     ]);	  
+	  
+     res.status(200).json({
+         success: true,
+         error: false,
+         data: responseData.savedSocialPosts.data,
+         pagination: responseData.savedSocialPosts.pagination,
+         infinite_scroll: responseData.savedSocialPosts.infinite_scroll,
+         message: !hashtag ? "List of saved social wall post[s]." : `List of social wall post[s] filtered using hashtag #${hashtag}.`
      });
   }catch(e){
      if(e){
@@ -385,7 +552,7 @@ module.exports.GetWallContentByReferenceNumber = async(req,res) => {
         res.status(400).json({
             success: false,
             error: true,
-            message: "Error: fetching my socail wall post[s]."
+            message: "Error: fetching my social wall post[s]."
         });
 	return;     
      }
@@ -589,7 +756,11 @@ module.exports.SaveSocialContent = async(req,res) => {
       redisClient = await connectToRedis();
       await invalidatePostCache(redisClient,response[1]?.post_id);
       await invalidateUserCache(redisClient,email,reference_number);
-      console.log(response[1]?.post_id);	  
+      await invalidateSavedPostCache(redisClient,response[1]?.post_id);	 
+      await invalidateSavedPostCollectionCache(redisClient,response[1]?.post_id);	  
+      //-.reward: wee-point	  
+      await onCreateWeePointPost(email,'social_post');
+
       res.status(200).json({
           success: true,
           error: false,
@@ -1279,6 +1450,7 @@ module.exports.SocialProfileMetrics = async(req,res) => {
       const name = userDetail?.display_name;
       const profile_status = userDetail?.privacy_status;	  
       const stats = await getUserActivityMetrics(reference_number,target_reference_number,name,profile_status);
+      
       res.status(200).json({
           success: true,
           error: false,

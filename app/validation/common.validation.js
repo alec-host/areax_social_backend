@@ -516,6 +516,18 @@ const getWallFeedValidator = [
     query('email', 'Invalid email').isEmail(),
     query('reference_number', 'Reference number must be provided').not().isEmpty(),
     query('post_type', 'Post type must be provided').not().isEmpty(),
+    query('collection_reference_number')
+      .optional()
+      .not().isEmpty().withMessage('collection_reference_number, if provided, must not be empty')
+      .custom(value => value !== null).withMessage('collection_reference_number must not be null'),	
+    query('hashtag')
+      .optional()
+      .not().isEmpty().withMessage('Hashtag, if provided, must not be empty')
+      .custom(value => value !== null).withMessage('Hashtag must not be null'),
+    query('cursor')
+      .optional()
+      .not().isEmpty().withMessage('Cursor, if provided, must not be empty')
+      .custom(value => value !== null).withMessage('Cursor must not be null'),	
     query('page', 'Page number must be provided').not().isEmpty().isInt({ gt: 0 }).withMessage('Page must be a number greater than 0'),
     query('limit', 'Limit must be provided').not().isEmpty().isInt({ gt: 0, lt: 101 }).withMessage('Limit must be a number between 1 and 100'),
 ];
@@ -1149,6 +1161,54 @@ const reviewReportedUserValidator = [
     body('report_id', 'report_id must be provided').not().isEmpty().isInt({ gt: 0 }).withMessage('report_id must be atleast 1'),
 ];
 
+const innerCircleTagValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    param('target_reference_number', 'Target reference number must be provided').not().isEmpty(),
+    param('is_set')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_set must be checked, has a value of 0 untag user as inner-circle or 1 - tag user as inner-circle.'),	
+];
+
+const createCollectionValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    //body('post_id', 'Post id must be provided').not().isEmpty(),
+    body('collection_name', 'collection_name must be provided').not().isEmpty(),
+    body('invitee_reference_numbers', 'invitee_reference_numbers must be provided in format: [invitee_reference_numbers]').not().isEmpty(),	
+    body('is_collection_shared')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_collection_shared must be checked, 0 - mark as not shared or 1 - mark as shared.'),
+	
+];
+
+const addCollectionInviteValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('collection_reference_number', 'collection_reference_number must be provided').not().isEmpty(),
+    body('invitee_reference_numbers', 'invitee_reference_numbers must be provided').not().isEmpty(),
+];
+
+const acceptRejectCollectionValidator = [
+    body('email', 'Missing: email must be checked').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Missing: reference_number must be checked').not().isEmpty(),
+    body('collection_reference_number', 'Missing: collection_reference_number must be checked').not().isEmpty(),	
+    body('is_accepted')
+        .isInt({ min: 0, max: 1 })
+        .withMessage('is_accepted must be checked, 0 - declined invite or 1 - accepted invite.'),	
+];
+
+const savePostToCollectionValidator = [
+    body('email', 'Email cannot be Empty').not().isEmpty(),
+    body('email', 'Invalid email').isEmail(),
+    body('reference_number', 'Reference number must be provided').not().isEmpty(),
+    body('collection_reference_number', 'collection_reference_number must be provided').not().isEmpty(),
+    body('post_id', 'post_id must be provided').not().isEmpty(),
+];
+
 /*
   *-email
  *-reference_number
@@ -1190,5 +1250,7 @@ module.exports = {
     getProfileWallFeedValidator,connectionUserListValidator,getPendingConnectionValidator,
     removeConnectionValidator,targetUserProfileMetricsValidator,groupWallURLValidator,
     singlePrivateGroupMgmtUploadValidator,targetUserGroupMetricsValidator,
-    changeGroupMemberPictureValidator,groupInviteApprovalValidator,reviewReportedUserValidator	
+    changeGroupMemberPictureValidator,groupInviteApprovalValidator,reviewReportedUserValidator,
+    innerCircleTagValidator,createCollectionValidator,addCollectionInviteValidator,
+    savePostToCollectionValidator,acceptRejectCollectionValidator	
 };

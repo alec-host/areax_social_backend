@@ -42,6 +42,8 @@ db2.wallpapers = require("./wallpaper.model")(sequelize2,Sequelize);
 db2.queued_friends_requests = require("./request.friend.model")(sequelize2,Sequelize);
 db2.report_post = require("./post.feedback.model")(sequelize2,Sequelize);
 db2.saved_posts = require("./saved.posts.model")(sequelize2,Sequelize);
+db2.collections = require("./collection.model")(sequelize2,Sequelize);
+db2.collections.invite = require("./collection.invite.model")(sequelize2,Sequelize);
 
 //console.log('AM HERE, AM HERE');
 (async() => {
@@ -52,4 +54,4 @@ db2.saved_posts = require("./saved.posts.model")(sequelize2,Sequelize);
   //console.log('AM HERE, AM HERE');	
 })();
 
-module.exports = { db,db2 };
+module.exports = { db,db2,sequelize2 };

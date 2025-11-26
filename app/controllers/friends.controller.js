@@ -3,8 +3,8 @@ const { findUserCountByEmail } = require("./user/find.user.count.by.email");
 const { findUserCountByReferenceNumber } = require("./user/find.user.count.by.reference.no");
 const { getUserDetailByReferenceNumber } = require("./user/get.user.details");
 //const { getPotentialFriends } = require("./user/friend/potential.friend");
-const { getMyFriendListByReferenceNumber } = require("./user/friend/my.friend");
-const { acceptFriend,blockFriend,unblockFriend } = require("./user/friend/update.friend.status"); 
+const { getMyFriendListByReferenceNumber, getMyInnerCircleByReferenceNumber } = require("./user/friend/my.friend");
+const { acceptFriend,blockFriend,unblockFriend,makeUserAsInnerCircle,resetUserAsInnerCircle,getInnerCircleTag } = require("./user/friend/update.friend.status"); 
 const { makeConnectionRequest } = require("./user/friend/request.friend");
 const { queueConnectionRequest } = require("./user/friend/queue.friend.request");
 const { deleteConnectionRequest } = require("./user/friend/purge.friend.request");
@@ -14,7 +14,7 @@ const { getUserProfilePrivacyStatus } = require("./user/get.user.profile.privacy
 const { getUserEmailByReferenceNumber } = require("./user/get.user.email.by.reference.no");
 const { getFriendRequestByReferenceNumber, getConnectionRequestorReferenceNumber } = require("./user/friend/get.friend.request.by.reference.no");
 const { filterJsonAttributes,filterJsonArrayAttributes,filterUserAttributes } = require("../utils/filter.json.attributes");
-const { updateSingleFriendDetailsCache } = require("../sync-cache-service/sync.service");
+const { updateSingleFriendDetailsCache,updateSingleFriendInnerCircleDetailsCache } = require("../sync-cache-service/sync.service");
 const { getConnectionFollowList } = require("./user/friend/follow");
 const { getConnectionFollowingList } = require("./user/friend/following");
 const { sendInAppNotification } = require("../services/IN-APP-NOTIFICATION");
@@ -104,7 +104,7 @@ module.exports.MyFriendList = async(req,res) => {
      }
      await getMyFriendListByReferenceNumber(reference_number,friend_category, async callBack => {	
         if(callBack){  
-           await updateSingleFriendDetailsCache(email);    
+           await updateSingleFriendDetailsCache(reference_number);    
            res.status(200).json({
                success: true,
                error: false,
@@ -491,7 +491,7 @@ module.exports.BlockFriend = async(req,res) => {
      const payload = { status:'blocked',reference_number,friend_reference_number };	
      const response = await blockFriend(payload);
      if(response[0]){
-        await updateSingleFriendDetailsCache(email);    
+        await updateSingleFriendDetailsCache(reference_number);    
         res.status(200).json({
             success: true,
             error: false,
@@ -544,7 +544,7 @@ module.exports.UnblockFriend = async(req,res) => {
      const payload = { status:'accepted',reference_number,friend_reference_number };	
      const response = await unblockFriend(payload);
      if(response[0]){
-        await updateSingleFriendDetailsCache(email);    
+        await updateSingleFriendDetailsCache(reference_number);    
         res.status(200).json({
             success: true,
             error: false,
@@ -600,8 +600,8 @@ module.exports.ViewTargetProfile = async(req,res) => {
      }	
      
      const response = await getUserProfilePrivacyStatus(target_reference_number);
-     if(response.privacy_status === "anonymous"){
-        return res.status(403).json({ success: false, error: true, message: "This user has choosen to be anonymous." });    
+     if(response.privacy_status === "private" && reference_number !== target_reference_number){
+        return res.status(403).json({ success: false, error: true, message: "This user has choosen to be private" });    
      }else if(response.privacy_status === "friend_only"){
         return res.status(403).json({ success: false, error: true, message: "This profile is visible to friends only." });	    
      }else{
@@ -624,7 +624,7 @@ module.exports.ViewTargetProfile = async(req,res) => {
           await deleteCache(client,key);
 	}
         //await deleteCache(client,key);
-	await closeRedisConnection(client);    
+	await closeRedisConnection(client);
         res.status(200).json({
             success: true,
             error: false,
@@ -784,6 +784,209 @@ module.exports.ConnectionFollowingList = async(req,res) => {
             success: false,
             error: true,
             message: e?.response?.message || e?.message || e?.response?.data || 'Something wrong has happened'
+        });
+     }
+  }
+};
+
+module.exports.SetResetInnerCircleTag = async(req,res) => {
+  const errors = validationResult(req);
+  const { email,reference_number } = req.body;
+  const { target_reference_number,is_set } = req.params; 
+ 
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+     return;
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+      if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+    
+     const payload = { 
+	close_friend_tag: Number(is_set) === 1 ? 'inner-circle' : null,
+	reference_number,
+	friend_reference_number: target_reference_number 
+     };
+
+     const innerCircleStatus = await getInnerCircleTag(payload);	  
+     
+     if(Number(innerCircleStatus) === 0 && Number(is_set) === 1){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: 'User is already tagged as inner-circle, to untag set is_set to 0.'
+        });
+	return;     
+     }
+
+     if(Number(innerCircleStatus) === 1 && Number(is_set) === 0){
+        res.status(400).json({
+            success: false,
+            error: true,
+            message: 'User is not tagged as inner-circle, set is_set to 1'
+        });
+        return;
+     }
+	  
+     const response = Number(is_set) === 1 ? await makeUserAsInnerCircle(payload) : await resetUserAsInnerCircle(payload); 
+     if(response[0]){
+        await updateSingleFriendDetailsCache(reference_number);
+        res.status(200).json({
+            success: true,
+            error: false,
+            message: response[1]
+        });
+     }else{
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: response[1]
+        });
+     }
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || e?.response?.data || 'Something wrong has happened'
+        });
+     }
+  }
+};
+
+/*
+module.exports.ResetConnectionAsInnerCircle = async(req,res) => {
+  const errors = validationResult(req);
+  const { email,reference_number,target_reference_number,is_set } = req.body;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+     return;
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+      if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+     const payload = { close_friend_tag: null,reference_number,friend_reference_number: target_reference_number };
+     const response = await resetUserAsInnerCircle(payload);
+     if(response[0]){
+        await updateSingleFriendDetailsCache(email);
+        res.status(200).json({
+            success: true,
+            error: false,
+            message: response[1]
+        });
+     }else{
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: response[1]
+        });
+     }
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.message || e?.response?.data || 'Something wrong has happened'
+        });
+     }
+  }
+};
+*/
+
+module.exports.MyInnerCircleList = async(req,res) => {
+  const errors = validationResult(req);
+  const { email, reference_number, friend_category } = req.query;
+  if(!errors.isEmpty()){
+     res.status(422).json({ success: false, error: true, message: errors.array() });
+     return;
+  }
+  try{
+     const email_found = await findUserCountByEmail(email);
+     if(email_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Email not found."
+        });
+        return;
+     }
+     const reference_number_found = await findUserCountByReferenceNumber(reference_number);
+     if(reference_number_found === 0){
+        res.status(404).json({
+            success: false,
+            error: true,
+            message: "Reference number not found."
+        });
+        return;
+     }
+     const client = await connectToRedis();
+     const cachedFriendList = await client.get(`myfriendInnerCircle:${email}`);
+     if(cachedFriendList){
+        res.status(200).json({
+            success: true,
+            error: false,
+            data: JSON.parse(cachedFriendList),
+            message: "Friend (inner-circle) list."
+        });
+        return;
+     }
+     await getMyInnerCircleByReferenceNumber(reference_number,friend_category,async callBack => {
+        if(callBack){
+           await updateSingleFriendInnerCircleDetailsCache(reference_number);
+           res.status(200).json({
+               success: true,
+               error: false,
+               data: callBack,
+               message: "Friend (inner-circle) list."
+           });
+        }else{
+           res.status(404).json({
+               success: false,
+               error: true,
+               data: [],
+               message: "Friend (inner-circle) list is not available at the moment."
+           });
+        }
+     });
+  }catch(e){
+     if(e){
+        res.status(500).json({
+            success: false,
+            error: true,
+            message: e?.response?.message || e?.response?.data || e?.message || 'Something wrong has happened'
         });
      }
   }

@@ -16,14 +16,14 @@ module.exports = (sequelize,Sequelize) => {
       allowNull: false,
     },	  
     reference_number: {
-      type: DataTypes.STRING(105),
+      type: DataTypes.STRING(165),
     },
     friend_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
     friend_reference_number: {
-      type: DataTypes.STRING(105),
+      type: DataTypes.STRING(165),
     },
     friend_name: {
       type: DataTypes.STRING(105),
@@ -43,9 +43,13 @@ module.exports = (sequelize,Sequelize) => {
       }
     },	  
     friend_category: {
-      type: DataTypes.ENUM('inner-circle','follow'),
+      type: DataTypes.ENUM('following','follow'),
       allowNull: true	    
-    },	  
+    },
+    close_friend_tag: {
+      type: DataTypes.STRING(25),
+      allowNull: true      
+    },  	  
     status: {
       type: DataTypes.ENUM('pending', 'accepted', 'blocked', 'unfriended'),
       allowNull: false,
@@ -81,6 +85,11 @@ module.exports = (sequelize,Sequelize) => {
             fields: ['friend_category'],
             using: 'BTREE',
 	}, 
+        {
+            name: 'close_friend_tag_index',
+            fields: ['close_friend_tag'],
+            using: 'BTREE',
+        },	    
         {
             unique: true,
             fields: ['user_id', 'reference_number', 'friend_id', 'friend_reference_number'],
